@@ -86,6 +86,7 @@ var Kernel = function(terminal, kwargs) {
 
     mkdir: function(name, path) {
         var inode = this.fs._name_in_path(name, path);
+        console.log("path: "+path);
         if (!inode) {
             var new_inode = new Inode({
                 'name': name,
@@ -98,7 +99,7 @@ var Kernel = function(terminal, kwargs) {
             var i = this.fs.add_inode(new_inode);
         } else if (inode.type != "dir") {
             throw {'output': 'File exists.'}
-        } else if (inode.type == "dir" && dirs.length == k) {
+        } else if (inode.type == "dir") {
             throw {'output': 'Directory exists.'}
         }
         return true;
@@ -119,6 +120,26 @@ var Kernel = function(terminal, kwargs) {
         } else {
             throw {'output': 'File exists.'};
         }
+    },
+
+    cd: function(name, path) {
+        var inode = this.fs._name_in_path(name, path);
+        if (inode) { // path exists
+            if (inode.type != 'dir')
+                throw {'output': 'Not a directory.'};
+
+            this.user.pwd = path+name+'/';
+
+            res = inode.access(this);
+            switch(res.action) {
+                case 'redirect':
+                    window.open(res.value, '', '');
+                    break;
+                default:
+                    break;
+            }
+        } else
+            throw {'output': 'No such directory.'};
     },
 
     //private:
@@ -228,8 +249,10 @@ var Filesystem = function(kwargs) {
 
     add_inode: function(inode) {
         var dir = this.dirs[inode.path];
-        if (!dir)
+        if (dir == undefined) {
             this.dirs[inode.path] = {'inodes': []};
+        }
+        var dir = this.dirs[inode.path];
 
         guid = this._guid();
         this.inodes[guid] = inode;
@@ -460,11 +483,15 @@ var mkdir = new Inode({
             paths = kernel.fs.iterate_paths(pwd, argv[1]);
             for (var i in paths) {
                 obj = paths[i];
-                if (!kernel.fs.path_exists(obj.fullpath+obj.name+'/'))
-                    // create if it doesnt exist
+
+                var objpath = obj.fullpath+obj.name+'/';
+                if (!kernel.fs.path_exists(objpath)) {
+                    // buggy
                     kernel.mkdir(obj.name, obj.fullpath);
+                }
             }
         } catch(err) {
+            console.log(err);
             return err;
         }
         return {'output': ''};
@@ -526,6 +553,10 @@ var cd = new Inode({
     'path': '/usr/bin',
     'access': function(kernel, argv) {
         var dir = argv[1];
+        var pwd = kernel.user.pwd;
+
+        if (argv.length != 2)
+            return {'output': 'cd <directory>'}
 
         if (dir == "..") {
             if (!(kernel.user.pwd == '/')) {
@@ -541,28 +572,16 @@ var cd = new Inode({
             return;
         }
 
-        var inodes = kernel.fs._inodes_for_path(kernel.user.pwd);
-        for (var k=0; k < inodes.length; k++) {
-            var obj = kernel.fs.inodes[inodes[k]];
-            if (obj.name == argv[1]) {
-                if (obj.type == "dir") {
-                    kernel.user.pwd += obj.name+'/';
+        try {
+            if (argv[1].substring(0,1) == '/')
+                pwd = '/';
 
-                    res = obj.access(kernel);
-                    switch(res.action) {
-                        case 'redirect':
-                            window.open(res.value, '', '');
-                            break;
-                        default:
-                            break;
-                    }
-                    return res;
-                } else {
-                    return {'output': argv[1]+": Not a directory."}
-                }
-            }
+            var obj = kernel.fs.iterate_paths(pwd, argv[1]).slice(-1)[0];
+            kernel.cd(obj.name, obj.fullpath);
+        } catch(err) {
+            return err;
         }
-        return {'output': argv[1]+": No such file or directory."}
+        return {'output': ''}
     }
 });
 
