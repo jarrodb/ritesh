@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+    <meta charset="utf-8">
+    <title>ip shell.js</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.0/jquery-ui.min.js"></script>
+    <script src="http://www.masswerk.at/termlib/termlib.js"></script>
+    <script src="ipsh.js"></script>
+
+    <script src="http://twitter.github.com/bootstrap/assets/js/bootstrap.js"></script>
+    <link href="http://twitter.github.com/bootstrap/assets/css/bootstrap.css" rel="stylesheet">
+    <link href="http://twitter.github.com/bootstrap/assets/css/bootstrap-responsive.css" rel="stylesheet">
+  </head>
+
+  <body onLoad="termOpen();">
+
+  <style>
+    .term {
+        font-family: courier,fixed,swiss,sans-serif;
+        font-size: 16px;
+            color: #66FF00;
+            font-weight: bold;
+        background: none;
+        margin:0;
+        padding:0;
+    }
+
+    .termReverse {
+    }
+  </style>
+
+  <script type="text/javascript">
+  <!--
+    TermGlobals.assignStyle( 16, 'b', '<b>', '<\/b>' );
+    TermGlobals.assignStyle( 32, 'm', '<span style="font-size:10px; letter-spacing:2px;">', '<\/span>' );
+
+    var term;
+
+    function termOpen() {
+        if ((!term) || (term.closed)) {
+            term = new Terminal({
+                x: 0,
+                y: 0,
+                cols: 200,
+                rows: 30,
+                termDiv: 'jterm',
+                bgColor: '#000',
+                handler: termHandler,
+                exitHandler: termExitHandler,
+                wrapping: true,
+                crsrBlinkMode: true,
+                crsrBlockMode: false
+            });
+        }
+
+        host = new Host(term, {});
+        host.motd = [
+            '*** welcome to jarrod\'s website ***',
+            '',
+            ' * type help to receive further instructions',
+            ' * type exit to quit',
+            ' ',
+        ];
+
+        term.open();
+        term.clear();
+
+        host.write(host.motd);
+        host.kernel.prompt();
+
+        // dimm UI text
+        var mainPane = (document.getElementById)?
+            document.getElementById('mainPane') : document.all.mainPane;
+        if (mainPane) mainPane.className = 'lh15 dimmed';
+    }
+    setTimeout(function(){
+        term.focus();
+        document.getElementById("jterm").focus();
+    },500);//milliseconds
+
+    function termExitHandler() {
+        // reset the UI
+        var mainPane = (document.getElementById)?
+            document.getElementById('mainPane') : document.all.mainPane;
+        if (mainPane) mainPane.className = 'lh15';
+    }
+
+    about = false;
+    function aboutHandler() {
+        if (!about) {
+            $('#screen').attr('class','span7');
+            $('#aboutme').show();
+            about = true;
+        } else {
+            $('#screen').attr('class','span12');
+            $('#aboutme').hide();
+            about = false;
+        }
+    }
+
+    // terminal main loop
+
+    function termHandler() {
+            this.newLine();
+
+            this.lineBuffer = this.lineBuffer.replace(/^\s+/, '');
+            var argv = this.lineBuffer.split(/\s+/);
+
+            host.inputHandler(argv);
+    }
+
+    </script>
+
+    <div class="container">
+      <div class="row" style="">
+        <div id="screen" style="text-align: center;">
+          <div id="jterm" style="height: 100%; position: relative; opacity:0.7; line-height: 1.2em; font-weight: bold;">hello
+          </div>
+        </div>
+        <div
+          id="help"
+          style="display: none; color: #000; opacity:1.0;"
+          class="span4 well">
+            <div class="pull-left">
+              <div><strong>ipsh.js</strong></div>
+              <div><i class="icon-map-marker"></i> IP Global Networks</div>
+              <div><i class="icon-signal"></i> +1 713 353 4100 </div>
+              <div><i class="icon-globe"></i> http://ja.rrod.org </div>
+              <div><i class="icon-envelope"></i> j@rrod.org </div>
+            </div>
+        </div>
+        <div class="clearfix"></div>
+      </div>
+    </div> <!-- /container -->
+  </body>
+</html>
