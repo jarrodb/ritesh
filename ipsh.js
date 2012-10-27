@@ -56,16 +56,26 @@ var Kernel = function(terminal, kwargs) {
     this.terminal = terminal;
     this.fs = new Filesystem();
     this.user = new User();
-    this.name = (kwargs.name) ? kwargs.name : 'jarrod';
+    this.name = 'jarrod';
 
 
 }; Kernel.prototype = {
     //public:
     input: function(argv) {
-        this._command(argv);
+        switch(argv[0]) {
+            // command easter eggs.
+            case 'amber':
+                // remove this later
+                this.terminal.write('The love of my life.');
+                break;
+            default:
+                this._command(argv);
+                break;
+        }
 
-        if (!this.user.sudoInput)
+        if (!this.user.sudoInput) {
             this.prompt();
+        }
     },
 
     write: function(output) { this.terminal.write(output); },
@@ -203,10 +213,12 @@ var Filesystem = function(kwargs) {
     },
 
     // private:
-    _name_exists_in_path: function(name, path) {
+
+    _name_in_path: function(name, path) {
+        // return the inode object for name in path
         var func = function(inode) {
             if (inode.name == name)
-                return true;
+                return inode;
             return false;
         }
 
@@ -215,7 +227,8 @@ var Filesystem = function(kwargs) {
         var results = this.map_inodes_in_path(func, path);
 
         for (var k=0; k < results.length; k++) {
-            if (results[k]) return true;
+            // return the inode id
+            if (results[k]) return results[k];
         }
         return false;
     },
@@ -289,7 +302,7 @@ var id = new Inode({
         if (kernel.user.is_root())
             output += '(root)';
         else
-            output += '(guest)';
+            output += '(gest)';
         return {'output': output}
     }
 });
@@ -388,21 +401,23 @@ var mkdir = new Inode({
             if (k != 0)
                 fullpath += '/'; // add / when its not the root
 
-            if (kernel.fs._name_exists_in_path(name, fullpath))
+            var inode = kernel.fs._name_in_path(name, fullpath);
+            if (!inode) {
+                var new_inode = new Inode({
+                    'name': name,
+                    'type': 'dir',
+                    'path': fullpath,
+                    'access': function(kernel, argv) {
+                        return { 'output': '' } // normal operation
+                    }
+                });
+                var i = kernel.fs.add_inode(new_inode);
+            } else if (inode.type != "dir") {
                 return {'output': 'File exists.'}
-
-            var new_inode = new Inode({
-                'name': name,
-                'type': 'dir',
-                'path': fullpath,
-                'access': function(kernel, argv) {
-                    return { 'output': '' } // normal operation
-                }
-            });
-            var i = kernel.fs.add_inode(new_inode);
-            console.log('added: '+i);
+            } else if (inode.type == "dir" && dirs.length == k) {
+                return {'output': 'Directory exists.'}
+            }
         }
-        console.log(kernel.fs.inodes);
 
         return {'output': ''}
     }
@@ -420,7 +435,7 @@ var touch = new Inode({
             return {'output': usage}
 
         // add sanity
-        if (kernel.fs._name_exists_in_path(argv[1], kernel.user.pwd))
+        if (kernel.fs._name_in_path(argv[1], kernel.user.pwd))
             return {'output': 'File exists.'}
 
         var new_inode = new Inode({
