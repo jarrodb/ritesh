@@ -84,6 +84,43 @@ var Kernel = function(terminal, kwargs) {
         this.terminal.prompt();
     },
 
+    mkdir: function(name, path) {
+        var inode = this.fs._name_in_path(name, path);
+        if (!inode) {
+            var new_inode = new Inode({
+                'name': name,
+                'type': 'dir',
+                'path': path,
+                'access': function(kernel, argv) {
+                    return { 'output': '' } // normal operation
+                }
+            });
+            var i = this.fs.add_inode(new_inode);
+        } else if (inode.type != "dir") {
+            throw {'output': 'File exists.'}
+        } else if (inode.type == "dir" && dirs.length == k) {
+            throw {'output': 'Directory exists.'}
+        }
+        return true;
+    },
+
+    touch: function(name, path) {
+        var inode = this.fs._name_in_path(name, path);
+        if (!inode) {
+            var new_inode = new Inode({
+                'name': name,
+                'type': 'file',
+                'path': path,
+                'access': function(kernel, argv) {
+                    return { 'output': '' }
+                }
+            });
+            var i = this.fs.add_inode(new_inode);
+        } else {
+            throw {'output': 'File exists.'};
+        }
+    },
+
     //private:
     _command: function(argv) {
         if (!argv[0]) return; // \n
@@ -212,6 +249,29 @@ var Filesystem = function(kwargs) {
         return results;
     },
 
+    iterate_paths: function(pwd, dirs) {
+        paths = [];
+        if (dirs.substring(0,1) == '/')
+            // string leading / for split purposes
+            dirs = dirs.substring(1);
+        dirs = dirs.split('/');
+
+        for (var k=0; k < dirs.length; k++) {
+            var name = dirs[k];
+
+            var fullpath = pwd+dirs.slice(0,k).join('/');
+            if (k != 0)
+                fullpath += '/'; // add / when its not the root
+
+            paths.push({'name': name, 'fullpath': fullpath});
+        }
+        return paths;
+    },
+
+    path_exists: function(path) {
+        return (this.dirs[path] != undefined);
+    },
+
     // private:
 
     _name_in_path: function(name, path) {
@@ -220,7 +280,7 @@ var Filesystem = function(kwargs) {
             if (inode.name == name)
                 return inode;
             return false;
-        }
+        };
 
         // results : Array containing results from name comparison
         //           ... not optimal, I know.
@@ -236,6 +296,12 @@ var Filesystem = function(kwargs) {
     _inodes_for_path: function(path) {
         var d = this.dirs[path];
         return (d) ? d.inodes : [];
+    },
+
+    _sanitize_path: function(path) {
+        if (path.substring(0, 1) == "/")
+            return path;
+        return '/'+path;
     },
 
     _guid: function() {
@@ -386,40 +452,22 @@ var mkdir = new Inode({
         var usage = argv[0]+' <dir>';
         var pwd = kernel.user.pwd;
 
-        // check for '/' in the name (split later, reject now)
-        // abstract this inode creation (we do it below also)
-
         // only one file at a time until i add a loop
         if (argv.length != 2 )
             return {'output': usage}
 
-        var dirs = argv[1].split('/');
-        for (var k=0; k < dirs.length; k++) {
-            var name = dirs[k];
-
-            var fullpath = pwd+dirs.slice(0,k).join('/');
-            if (k != 0)
-                fullpath += '/'; // add / when its not the root
-
-            var inode = kernel.fs._name_in_path(name, fullpath);
-            if (!inode) {
-                var new_inode = new Inode({
-                    'name': name,
-                    'type': 'dir',
-                    'path': fullpath,
-                    'access': function(kernel, argv) {
-                        return { 'output': '' } // normal operation
-                    }
-                });
-                var i = kernel.fs.add_inode(new_inode);
-            } else if (inode.type != "dir") {
-                return {'output': 'File exists.'}
-            } else if (inode.type == "dir" && dirs.length == k) {
-                return {'output': 'Directory exists.'}
+        try {
+            paths = kernel.fs.iterate_paths(pwd, argv[1]);
+            for (var i in paths) {
+                obj = paths[i];
+                if (!kernel.fs.path_exists(obj.fullpath+obj.name+'/'))
+                    // create if it doesnt exist
+                    kernel.mkdir(obj.name, obj.fullpath);
             }
+        } catch(err) {
+            return err;
         }
-
-        return {'output': ''}
+        return {'output': ''};
     }
 });
 
@@ -429,25 +477,23 @@ var touch = new Inode({
     'path': '/usr/bin',
     'access': function(kernel, argv) {
         var usage = argv[0]+' <file>';
+        var pwd = kernel.user.pwd;
 
         // only one file at a time until i add a loop
         if (argv.length != 2)
             return {'output': usage}
 
         // add sanity
-        if (kernel.fs._name_in_path(argv[1], kernel.user.pwd))
-            return {'output': 'File exists.'}
-
-        var new_inode = new Inode({
-            'name': argv[1],
-            'type': 'file',
-            'path': kernel.user.pwd,
-            'access': function(kernel, argv) {
-                return {'output': []}
-            }
-        });
-        kernel.fs.add_inode(new_inode);
-
+        try {
+            // touch just looks to create in the last path
+            var obj = kernel.fs.iterate_paths(pwd, argv[1]).slice(-1)[0];
+            if (kernel.fs.path_exists(obj.fullpath)) {
+                kernel.touch(obj.name, obj.fullpath);
+            } else
+                return {'output': 'No such file or directory.'};
+        } catch(err) {
+            return err;
+        }
         return {'output': ''}
     }
 });
@@ -554,7 +600,7 @@ var aboutme = new Inode({
 var root_README = new Inode({
     'name':'README',
     'type':'file',
-    'path':'/root',
+    'path':'/root/',
     'access': function(kernel, argv) {
         return {
             'output': [
