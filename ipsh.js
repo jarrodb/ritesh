@@ -17,21 +17,10 @@ var Host = function(terminal, kwargs) {
     ];
 
     // ghettoness insues
-    this.kernel.fs.add_inode(ls); //ghetto
-    this.kernel.fs.add_inode(cd); //ghetto
-    this.kernel.fs.add_inode(cat); //ghetto
-    this.kernel.fs.add_inode(exit); //ghetto
-    this.kernel.fs.add_inode(make); //ghetto
-    this.kernel.fs.add_inode(sudo); //ghetto
-    this.kernel.fs.add_inode(mkdir); //ghetto
-    this.kernel.fs.add_inode(touch); //ghetto
-    this.kernel.fs.add_inode(aboutme); //ghetto
-    this.kernel.fs.add_inode(root_README); //ghetto
-    this.kernel.fs.add_inode(root); //ghetto
-    this.kernel.fs.add_inode(work); //ghetto
-    this.kernel.fs.add_inode(code); //ghetto
-    this.kernel.fs.add_inode(bash); //ghetto
-    this.kernel.fs.add_inode(id); //ghetto
+    var stdlib = [cd, ls, cat, exit, sudo, make, touch, mkdir, bash, id, vim];
+    this.kernel.fs.add_inodes(stdlib);
+
+    this.kernel.fs.add_inodes([code, work, aboutme, root, root_README, amber]);
 
 }; Host.prototype = {
     //public:
@@ -76,18 +65,54 @@ var Kernel = function(terminal, kwargs) {
             case termKey.EOT:
                 this._command('exit');
                 break;
+            case termKey.SOH:
+                show_prompt = false;
+                //ctrl-a
+                for (var c=0; c<this.terminal._getLine().length; c++)
+                    this.terminal.cursorLeft();
+                break;
+            case termKey.ENQ:
+                show_prompt = false;
+                for (var c=0; c<this.terminal._getLine().length; c++)
+                    this.terminal.cursorRight();
+                break;
+            case termKey.ETB:
+                show_prompt = false;
+                var buffer = this.terminal._getLine();
+                var name = buffer.split(' ').slice(-1)[0];
+                if (!name)
+                    name = buffer.split(' ').slice(-2)[0]+' ';
+
+                for (var i=0; i<name.length; i++)
+                    this.terminal.backspace();
+                break;
             case termKey.TAB:
                 var buffer = this.terminal._getLine();
-                var name = buffer.split(' ').slice(-1)[0]; // last element
+                var pwd = this.user.pwd;
 
-                cmds = this.fs.command(name, this.user.pwd, true); //search=true
+                // last element split by '/' (for multiple dirs)
+                var tmp = buffer.split(' ').slice(-1)[0];
+                var names = tmp.split('/');
+                var name = names.pop();
+
+                if (tmp.substring(0,1) == '/')
+                    pwd = names.join('/')+'/';
+                else if (names.length)
+                    pwd += names.join('/')+'/';
+
+                cmds = this.fs.command(name, pwd, true); //search
                 if (cmds.length == 1) {
                     show_prompt = false;
-                    var rest = cmds[0].substring(name.length)+' ';
+                    var end = (cmds[0].type == 'dir') ? '/' : ' ';
+                    var rest = cmds[0].name.substring(name.length)+end;
                     this.terminal.type(rest);
                 } else {
+                    var output = '';
+                    for (var i=0; i<cmds.length; i++)
+                        output += cmds[i].name+" ";
+
                     this.write('%n');
-                    this.write(cmds.join('%n'));
+                    this.write(output);
                     append = buffer;
                     show_prompt = true;
                 }
@@ -280,7 +305,7 @@ var Filesystem = function(kwargs) {
 
                 if (search) {
                     if (obj.name.lastIndexOf(cmd, 0) == 0) {
-                        results.push(obj.name);
+                        results.push(obj);
                     }
                 }
                 else if (obj.name == cmd && obj.type == "cmd") {
@@ -289,6 +314,11 @@ var Filesystem = function(kwargs) {
             }
         }
         return (search) ? results : undefined;
+    },
+
+    add_inodes: function(inodes) {
+        for (var i=0; i<inodes.length; i++)
+            this.add_inode(inodes[i]);
     },
 
     add_inode: function(inode) {
@@ -575,20 +605,22 @@ var cat = new Inode({
     'type':'cmd',
     'path':'/usr/bin',
     'access': function(kernel, argv) {
-        var filename = argv[1];
+        var usage = argv[0]+' <file>';
+        var pwd = kernel.user.pwd;
 
-        var inodes = kernel.fs._inodes_for_path(kernel.user.pwd);
-        for (var k=0; k < inodes.length; k++) {
-            var obj = kernel.fs.inodes[inodes[k]];
-            if (obj.name == filename) {
-                if (obj.type == "file") {
-                    return obj.access(kernel);
-                } else {
-                    return {'output': argv[1]+": Not a file."}
-            }
-            }
+        if (argv.length != 2)
+            return {'output': usage};
+
+        try {
+            var obj = kernel.fs.iterate_paths(pwd, argv[1]).slice(-1)[0];
+            var inode = kernel.fs._name_in_path(obj.name, obj.fullpath)
+            if (inode.type == "file")
+                return inode.access(kernel);
+            else
+                return {'output': argv[1]+": Not a file."}
+        } catch(err) {
+            return {'output': err};
         }
-        return {'output': argv[1]+": No such file or directory."}
     }
 });
 
@@ -631,6 +663,15 @@ var cd = new Inode({
     }
 });
 
+var vim = new Inode({
+    'name': 'vim',
+    'type': 'cmd',
+    'path': '/usr/bin',
+    'access': function(kernel, argv) {
+        return {'output': 'Not yet.'}
+    }
+});
+
 var exit = new Inode({
     'name': 'exit',
     'type': 'cmd',
@@ -640,6 +681,13 @@ var exit = new Inode({
             kernel.user.root(false);
         else
             kernel.terminal.close();
+    }
+});
+
+//easter
+var amber = new Inode({'name':'amber', 'type':'cmd', 'path':'/usr/bin',
+    'access': function(kernel, argv) {
+        return {'output': 'The love of my life.'}
     }
 });
 
@@ -708,3 +756,5 @@ var root = new Inode({
         return { 'output': '' } // normal operation
     }
 });
+
+
