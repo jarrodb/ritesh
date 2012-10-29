@@ -52,6 +52,7 @@
                 bgColor: '#000',
                 handler: termHandler,
                 exitHandler: termExitHandler,
+                ctrlHandler: termCtrlHandler,
                 wrapping: true,
                 crsrBlinkMode: true,
                 crsrBlockMode: false
@@ -106,12 +107,17 @@
     // terminal main loop
 
     function termHandler() {
-            this.newLine();
+        this.newLine();
 
-            this.lineBuffer = this.lineBuffer.replace(/^\s+/, '');
-            var argv = this.lineBuffer.split(/\s+/);
+        this.lineBuffer = this.lineBuffer.replace(/^\s+/, '');
+        this.lineBuffer = $.trim(this.lineBuffer);
+        var argv = this.lineBuffer.split(/\s+/);
 
-            host.inputHandler(argv);
+        host.inputHandler(argv);
+    }
+
+    function termCtrlHandler() {
+        host.inputHandler(this.inputChar);
     }
 
     </script>
