@@ -61,6 +61,7 @@ var Kernel = function(terminal, kwargs) {
 
 }; Kernel.prototype = {
     //public:
+<<<<<<< HEAD
     input: function(input, ctrl) {
         var show_prompt = true;
         var append = false;
@@ -94,16 +95,31 @@ var Kernel = function(terminal, kwargs) {
                 break;
             default:
                 this._command(input);
+=======
+    input: function(argv) {
+        switch(argv[0]) {
+            // command easter eggs.
+            case 'amber':
+                // remove this later
+                this.terminal.write('The love of my life.');
+                break;
+            default:
+                this._command(argv);
+>>>>>>> 5bbf61f842de5448e24412af4291dd2936fc1ab8
                 break;
         }
 
         if (!this.user.sudoInput) {
+<<<<<<< HEAD
             if (show_prompt)
                 this.prompt();
             if (append) {
                 this.terminal.type(append);
                 append = false;
             }
+=======
+            this.prompt();
+>>>>>>> 5bbf61f842de5448e24412af4291dd2936fc1ab8
         }
     },
 
@@ -115,6 +131,10 @@ var Kernel = function(terminal, kwargs) {
 
     mkdir: function(name, path) {
         var inode = this.fs._name_in_path(name, path);
+<<<<<<< HEAD
+=======
+        console.log("path: "+path);
+>>>>>>> 5bbf61f842de5448e24412af4291dd2936fc1ab8
         if (!inode) {
             var new_inode = new Inode({
                 'name': name,
@@ -330,8 +350,12 @@ var Filesystem = function(kwargs) {
             if (k != 0)
                 fullpath += '/'; // add / when its not the root
 
+<<<<<<< HEAD
             if (name)
                 paths.push({'name': name, 'fullpath': fullpath});
+=======
+            paths.push({'name': name, 'fullpath': fullpath});
+>>>>>>> 5bbf61f842de5448e24412af4291dd2936fc1ab8
         }
         return paths;
     },
@@ -622,7 +646,10 @@ var cd = new Inode({
                 pwd = '/';
 
             var obj = kernel.fs.iterate_paths(pwd, argv[1]).slice(-1)[0];
+<<<<<<< HEAD
             console.log(obj);
+=======
+>>>>>>> 5bbf61f842de5448e24412af4291dd2936fc1ab8
             kernel.cd(obj.name, obj.fullpath);
         } catch(err) {
             return err;
