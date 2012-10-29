@@ -80,7 +80,7 @@ var Kernel = function(terminal, kwargs) {
                 var buffer = this.terminal._getLine();
                 var name = buffer.split(' ').slice(-1)[0]; // last element
 
-                cmds = this.fs.command(name, true); // search=true
+                cmds = this.fs.command(name, this.user.pwd, true); //search=true
                 if (cmds.length == 1) {
                     show_prompt = false;
                     var rest = cmds[0].substring(name.length)+' ';
@@ -175,7 +175,7 @@ var Kernel = function(terminal, kwargs) {
         if (!argv[0]) return; // \n
 
         // get cmd from fs
-        var i = this.fs.command(argv[0]);
+        var i = this.fs.command(argv[0], this.user.pwd);
 
         // sudo exception
         if (this.user.sudoInput) {
@@ -261,18 +261,18 @@ var Filesystem = function(kwargs) {
 
 }; Filesystem.prototype = {
 
-    command: function(cmd, search) {
+    command: function(cmd, pwd, search) {
         search = (search) ? true : false;
-        var path = this.PATH;
+        var _path = this.PATH;
         var results = [];
 
-        //if (path.indexOf(pwd) == -1)
-        //    path.push(this.PATH.push(pwd)); // "."
+        if (_path.indexOf(pwd) == -1)
+            _path.push(this.PATH.push(pwd)); // push current into path
 
         if (search && !cmd) return [];
 
-        for (var j=0; j < this.PATH.length; j++) {
-            var path = this.PATH[j];
+        for (var j=0; j < _path.length; j++) {
+            var path = _path[j];
             var inodes = this._inodes_for_path(path);
             for (var k=0; k < inodes.length; k++) {
                 var inode = inodes[k];
