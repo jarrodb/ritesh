@@ -467,13 +467,47 @@ var Inode = function(obj) {
         }
     },
 
-    ls_format: function() {
-        if (this.type == "dir")
-            return this.name+"/ ";
-        else if (this.type == "cmd")
-            return this.name+"* ";
-        else
-            return this.name;
+    ls_format: function(kernel, detail) {
+        var name = this.name;
+        var perm = "-rwx------";
+
+        var user = "root";
+        var user_length = 10;
+
+        var size = "14";
+        var size_length = 5;
+
+        if (kernel.user.pwd.indexOf(kernel.user.homedir) != -1)
+            user = kernel.user.name; // in users homedir
+
+        console.log("type: "+this.type);
+
+        switch (this.type) {
+            case 'dir':
+                perm = "d"+perm.substr(1,perm.length);
+                name += "/ ";
+                break;
+            case "cmd":
+                name += "* ";
+                size = "109";
+                break;
+            case "file":
+                perm = perm.substr(0,3)+"-"+perm.substr(4,perm.length);
+                perm[3] = "-";
+                size = "50";
+                break;
+            default:
+                break;
+        }
+
+        for (var x=0; x<user_length; x++)
+            user[x] = (user[x]) ? user[x] : " ";
+        for (var x=0; x<size_length; x++)
+            size[x] = (size[x]) ? size[x] : " ";
+
+        if (detail)
+            return perm+" "+user+" "+size+" "+name;
+        return name;
     },
 
     _blank: true
@@ -606,7 +640,7 @@ var ls = new Inode({
         var pwd = kernel.user.pwd;
 
         var func = function(inode) {
-            output.push(inode.ls_format());
+            output.push(inode.ls_format(kernel, detail));
         }
 
         if (argv[1]) {
