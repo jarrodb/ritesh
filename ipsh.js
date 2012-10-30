@@ -1,3 +1,12 @@
+/// essentials
+/// - Implement:
+///    cat, cp, date, echo,
+///    hostname, ls, mkdir,
+///    more, mv, pwd, uname,
+///    rmdir, bash, su, rm
+///
+/// - Not fully: df, dd, dmesg, ps, kill, mount, ps, umount,
+/// - Not yet: chgrp, chmod, chown, ln, login, more,
 
 /// Objects
 
@@ -8,7 +17,7 @@ var Host = function(terminal, kwargs) {
         return {'error': 'termlib.js Terminal required'}
 
     //
-    this.name = kwargs.name ? kwargs.name : 'ipgn'; // hostname
+    this.name = kwargs.name ? kwargs.name : 'ipsh'; // hostname
     this.kernel = new Kernel(terminal, {});
 
     this.motd = [
@@ -16,16 +25,20 @@ var Host = function(terminal, kwargs) {
         ' '
     ];
 
-    // ghettoness insues
-    var stdlib = [cd, ls, cat, exit, sudo, make, touch, mkdir, bash, id, vim];
-    this.kernel.fs.add_inodes(stdlib);
+    // essentials
+    this.kernel.fs.add_inodes([
+        bash, cat, cd, df, exit, help, id, ls, make, mkdir,
+        pwd, sudo, touch, vim
+    ]);
 
+    // move to personal extension
     this.kernel.fs.add_inodes([code, work, aboutme, root, root_README, amber]);
 
 }; Host.prototype = {
     //public:
     inputHandler: function(input, ctrl) {
-        this.kernel.input(input, ctrl);
+        input[0] = (input[0]) ? input[0].replace("^\.\/","") : input[0];
+        this.kernel.input(input);
     },
 
     write: function(output) {
@@ -47,6 +60,7 @@ var Kernel = function(terminal, kwargs) {
     this.user = new User();
     this.name = 'jarrod';
 
+    this.mkdir('bin','/');
 
 }; Kernel.prototype = {
     //public:
@@ -58,25 +72,24 @@ var Kernel = function(terminal, kwargs) {
             case termKey.ETX:
                 //this.terminal.close(); // ^C
                 break;
-            case termKey.NAK:
+            case termKey.NAK: //^U
                 show_prompt = false;
                 this.terminal._clearLine();
                 break;
-            case termKey.EOT:
-                this._command('exit');
+            case termKey.EOT: //^D
+                this._command(['exit']);
                 break;
-            case termKey.SOH:
+            case termKey.SOH: //^A
                 show_prompt = false;
-                //ctrl-a
                 for (var c=0; c<this.terminal._getLine().length; c++)
                     this.terminal.cursorLeft();
                 break;
-            case termKey.ENQ:
+            case termKey.ENQ: //^E
                 show_prompt = false;
                 for (var c=0; c<this.terminal._getLine().length; c++)
                     this.terminal.cursorRight();
                 break;
-            case termKey.ETB:
+            case termKey.ETB: //^W
                 show_prompt = false;
                 var buffer = this.terminal._getLine();
                 var name = buffer.split(' ').slice(-1)[0];
@@ -86,9 +99,10 @@ var Kernel = function(terminal, kwargs) {
                 for (var i=0; i<name.length; i++)
                     this.terminal.backspace();
                 break;
-            case termKey.TAB:
+            case termKey.TAB: // TAB
                 var buffer = this.terminal._getLine();
                 var pwd = this.user.pwd;
+                var append = false;
 
                 // last element split by '/' (for multiple dirs)
                 var tmp = buffer.split(' ').slice(-1)[0];
@@ -101,7 +115,11 @@ var Kernel = function(terminal, kwargs) {
                     pwd += names.join('/')+'/';
 
                 cmds = this.fs.command(name, pwd, true); //search
-                if (cmds.length == 1) {
+
+                if (cmds.length == 0) {
+                    // should show full dir list here...
+                    append = buffer;
+                } else if (cmds.length == 1) {
                     show_prompt = false;
                     var end = (cmds[0].type == 'dir') ? '/' : ' ';
                     var rest = cmds[0].name.substring(name.length)+end;
@@ -280,7 +298,7 @@ var User = function(kwargs) {
 var Filesystem = function(kwargs) {
     kwargs = (!kwargs) ? {} : kwargs
 
-    this.PATH = ['/', '/usr/bin'];
+    this.PATH = ['/', '/bin/'];
     this.inodes = {}; //<guid>: <object>
     this.dirs = {};
 
@@ -447,20 +465,45 @@ var Inode = function(obj) {
 
 // var cmds
 
+var help = new Inode({'name': 'help', 'type': 'cmd', 'path': '/bin/',
+    'access': function() {
+        return {'output': [
+            '****************************************',
+            '* ipsh tries to implement most unix cmds',
+            '* so feel free to poke around the system',
+            '****************************************',
+            '',
+        ]}
+    }
+});
+
 var bash = new Inode({
     'name': 'bash',
     'type': 'cmd',
-    'path': '/usr/bin',
+    'path': '/bin/',
     'access': function(kernel, argv) {
         if (kernel.user.sudo)
             kernel.user.root(true);
     }
 });
 
+var df = new Inode({'name': 'df', 'type': 'cmd', 'path': '/bin/',
+    'access': function(kernel, argv) {
+        return {'output': [
+            'Filesystem  1K-blocks     Used  Available  Use%%  Mounted on',
+            '/dev/xvda    10452384  6786764    3141284   69%%  /',
+            'udev           498356        4     498352    1%%  /dev',
+            'tmpfs          203060      212     202848    1%%  /run',
+            'none             5120        0       5120    0%%  /run/lock',
+            'none           507644        0     507644    0%%  /run/shm'
+        ]}
+    }
+});
+
 var id = new Inode({
     'name': 'id',
     'type': 'cmd',
-    'path': '/usr/bin',
+    'path': '/bin/',
     'access': function(kernel, argv) {
         var output = 'id='+kernel.user.id;
         if (kernel.user.is_root())
@@ -474,7 +517,7 @@ var id = new Inode({
 var make = new Inode({
     'name': 'make',
     'type': 'cmd',
-    'path': '/usr/bin',
+    'path': '/bin/',
     'access': function(kernel, argv) {
         var output = 'I don\'t listen to you.';
 
@@ -488,7 +531,7 @@ var make = new Inode({
 var sudo = new Inode({
     'name': 'sudo',
     'type': 'cmd',
-    'path': '/usr/bin',
+    'path': '/bin/',
     'access': function(kernel, argv) {
         kernel.user.sudo = kernel.user.is_root() ? true : false;
         var sudo_argv = kernel.user.sudoInput;
@@ -524,17 +567,42 @@ var sudo = new Inode({
 var ls = new Inode({
     'name': 'ls',
     'type': 'cmd',
-    'path': '/usr/bin',
+    'path': '/bin/',
     'su': 'false',
     'access': function(kernel, argv) {
         var output = [];
         var detail = false;
+        var pwd = kernel.user.pwd;
 
         var func = function(inode) {
             output.push(inode.ls_format());
         }
 
-        kernel.fs.map_inodes_in_path(func, kernel.user.pwd);
+        if (argv[1]) {
+            if (argv[1].substring(0,1) == '-') {
+                // detail true for all arguments for now
+                detail = true;
+                argv = [argv[0]].concat(argv.slice(2));
+            }
+        }
+
+        try {
+            if (!argv[1])
+                kernel.fs.map_inodes_in_path(func, pwd);
+            else {
+                var obj = kernel.fs.iterate_paths(pwd, argv[1]).slice(-1)[0];
+
+                var testpath = obj.fullpath+obj.name+'/';
+                if (kernel.fs.path_exists(testpath))
+                    kernel.fs.map_inodes_in_path(func, testpath);
+                else if (kernel.fs._name_in_path(obj.name, obj.fullpath))
+                    output.push(obj.name);
+                else
+                    output.push('');
+            }
+        } catch(err) {
+            return err;
+        }
 
         return {'output': output}
     }
@@ -544,11 +612,12 @@ var ls = new Inode({
 var mkdir = new Inode({
     'name': 'mkdir',
     'type': 'cmd',
-    'path': '/usr/bin',
+    'path': '/bin/',
     'su': true,
     'access': function(kernel, argv) {
         var usage = argv[0]+' <dir>';
         var pwd = kernel.user.pwd;
+        var detail = false;
 
         // only one file at a time until i add a loop
         if (argv.length != 2 )
@@ -576,7 +645,7 @@ var mkdir = new Inode({
 var touch = new Inode({
     'name': 'touch',
     'type': 'cmd',
-    'path': '/usr/bin',
+    'path': '/bin/',
     'access': function(kernel, argv) {
         var usage = argv[0]+' <file>';
         var pwd = kernel.user.pwd;
@@ -603,7 +672,7 @@ var touch = new Inode({
 var cat = new Inode({
     'name':'cat',
     'type':'cmd',
-    'path':'/usr/bin',
+    'path':'/bin/',
     'access': function(kernel, argv) {
         var usage = argv[0]+' <file>';
         var pwd = kernel.user.pwd;
@@ -627,15 +696,17 @@ var cat = new Inode({
 var cd = new Inode({
     'name': 'cd',
     'type': 'cmd',
-    'path': '/usr/bin',
+    'path': '/bin/',
     'access': function(kernel, argv) {
         var dir = argv[1];
         var pwd = kernel.user.pwd;
 
-        if (argv.length != 2)
-            return {'output': 'cd <directory>'}
+        if (argv.length != 2) {
+            kernel.user.pwd = '/';
+            return {'output': ''};
+        }
 
-        if (dir == "..") {
+        if (dir == ".." || dir == "../") {
             if (!(kernel.user.pwd == '/')) {
                 var dirs = kernel.user.pwd.split('/');
                 if (dirs.length == 1 )
@@ -647,14 +718,14 @@ var cd = new Inode({
                 }
             }
             return;
-        }
+        } else if (dir == "." || dir == "./")
+            return {'output':''};
 
         try {
             if (argv[1].substring(0,1) == '/')
                 pwd = '/';
 
             var obj = kernel.fs.iterate_paths(pwd, argv[1]).slice(-1)[0];
-            console.log(obj);
             kernel.cd(obj.name, obj.fullpath);
         } catch(err) {
             return err;
@@ -663,19 +734,22 @@ var cd = new Inode({
     }
 });
 
-var vim = new Inode({
-    'name': 'vim',
+var pwd = new Inode({
+    'name': 'pwd',
     'type': 'cmd',
-    'path': '/usr/bin',
+    'path': '/bin/',
+    'access': function(kernel, argv) {
+        return {'output': kernel.user.pwd}
+    }
+});
+
+var vim = new Inode({'name': 'vim', 'type': 'cmd', 'path': '/bin/',
     'access': function(kernel, argv) {
         return {'output': 'Not yet.'}
     }
 });
 
-var exit = new Inode({
-    'name': 'exit',
-    'type': 'cmd',
-    'path': '/usr/bin',
+var exit = new Inode({'name': 'exit', 'type': 'cmd', 'path': '/bin/',
     'access': function(kernel, argv) {
         if (kernel.user.is_root())
             kernel.user.root(false);
@@ -685,7 +759,7 @@ var exit = new Inode({
 });
 
 //easter
-var amber = new Inode({'name':'amber', 'type':'cmd', 'path':'/usr/bin',
+var amber = new Inode({'name':'amber', 'type':'cmd', 'path':'/bin/',
     'access': function(kernel, argv) {
         return {'output': 'The love of my life.'}
     }
@@ -693,9 +767,7 @@ var amber = new Inode({'name':'amber', 'type':'cmd', 'path':'/usr/bin',
 
 // files
 // get these out of here!
-var aboutme = new Inode({
-    'name':'about.txt',
-    'type':'file',
+var aboutme = new Inode({'name':'about.txt', 'type':'file',
     'access': function(kernel, argv) {
         return {
             'output': [
@@ -710,10 +782,7 @@ var aboutme = new Inode({
     }
 });
 
-var root_README = new Inode({
-    'name':'README',
-    'type':'file',
-    'path':'/root/',
+var root_README = new Inode({'name':'README', 'type':'file', 'path':'/root/',
     'access': function(kernel, argv) {
         return {
             'output': [
@@ -737,10 +806,8 @@ var work = new Inode({
     }
 });
 
-var code = new Inode({
-    'name':'code',
-    'type':'dir',
-    'access': function(kernel, argv) {
+var code = new Inode({'name':'code', 'type':'dir',
+    'access': function() {
         return {
             'output': '*** Redirecting to github.com ***',
             'action': 'redirect',
@@ -749,12 +816,7 @@ var code = new Inode({
     }
 });
 
-var root = new Inode({
-    'name':'root',
-    'type':'dir',
-    'access': function(kernel, argv) {
-        return { 'output': '' } // normal operation
-    }
+var root = new Inode({'name':'root', 'type':'dir',
+    'access': function() { return { 'output': '' }; }
 });
-
 
