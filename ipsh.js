@@ -498,14 +498,29 @@ var bash = new Inode({
 
 var df = new Inode({'name': 'df', 'type': 'cmd', 'path': '/bin/',
     'access': function(kernel, argv) {
-        return {'output': [
+        var output = [
             'Filesystem  1K-blocks     Used  Available  Use%%  Mounted on',
             '/dev/xvda    10452384  6786764    3141284   69%%  /',
             'udev           498356        4     498352    1%%  /dev',
             'tmpfs          203060      212     202848    1%%  /run',
             'none             5120        0       5120    0%%  /run/lock',
             'none           507644        0     507644    0%%  /run/shm'
-        ]}
+        ];
+
+        if (argv[1]) {
+            if (argv[1].substring(0,1) == '-') {
+                if (argv[1].slice(1).indexOf('h') != -1) {
+                    output = [
+                        'Filesystem      Size   Used  Avail Capacity  iused    ifree %iused  Mounted on',
+                        '/dev/disk0s2   233Gi  112Gi  120Gi    49% 29540479 31528961   48%   /',
+                        'devfs          183Ki  183Ki    0Bi   100%      634        0  100%   /dev',
+                        'map -hosts       0Bi    0Bi    0Bi   100%        0        0  100%   /net',
+                        'map auto_home    0Bi    0Bi    0Bi   100%        0        0  100%   /home'
+                    ];
+                }
+            }
+        }
+        return {'output': output};
     }
 });
 
@@ -715,7 +730,7 @@ var cd = new Inode({
             return {'output': ''};
         }
 
-        if (dir == "~") {
+        if (dir == "~" || dir == "~/") {
             kernel.user.pwd = kernel.user.homedir;
             return;
         } else if (dir == "/") {
