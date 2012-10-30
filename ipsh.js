@@ -32,12 +32,13 @@ var Host = function(terminal, kwargs) {
     ]);
 
     // move to personal extension
-    this.kernel.fs.add_inodes([code, work, aboutme, root, root_README, amber]);
+    this.kernel.fs.add_inodes([code, work, aboutme, root_README, amber]);
 
 }; Host.prototype = {
     //public:
     inputHandler: function(input, ctrl) {
         input[0] = (input[0]) ? input[0].replace("^\.\/","") : input[0];
+        console.log(input);
         this.kernel.input(input);
     },
 
@@ -60,7 +61,15 @@ var Kernel = function(terminal, kwargs) {
     this.user = new User();
     this.name = 'jarrod';
 
+    // fileskeleton
     this.mkdir('bin','/');
+    this.mkdir('root','/');
+    this.mkdir('home','/');
+    this.mkdir('guest','/home/');
+
+    // user init
+    this.user.homedir = '/home/guest/';
+    this.user.pwd = this.user.homedir;
 
 }; Kernel.prototype = {
     //public:
@@ -702,11 +711,17 @@ var cd = new Inode({
         var pwd = kernel.user.pwd;
 
         if (argv.length != 2) {
-            kernel.user.pwd = '/';
+            kernel.user.pwd = kernel.user.homedir;
             return {'output': ''};
         }
 
-        if (dir == ".." || dir == "../") {
+        if (dir == "~") {
+            kernel.user.pwd = kernel.user.homedir;
+            return;
+        } else if (dir == "/") {
+            kernel.user.pwd = '/';
+            return;
+        } else if (dir == ".." || dir == "../") {
             if (!(kernel.user.pwd == '/')) {
                 var dirs = kernel.user.pwd.split('/');
                 if (dirs.length == 1 )
@@ -767,20 +782,6 @@ var amber = new Inode({'name':'amber', 'type':'cmd', 'path':'/bin/',
 
 // files
 // get these out of here!
-var aboutme = new Inode({'name':'about.txt', 'type':'file',
-    'access': function(kernel, argv) {
-        return {
-            'output': [
-                '**** About Me ****',
-                '',
-                'Name : Jarrod Baumann',
-                'Web  : http://j.arrod.org',
-                'Email: j@rrod.org',
-                ''
-            ],
-        }
-    }
-});
 
 var root_README = new Inode({'name':'README', 'type':'file', 'path':'/root/',
     'access': function(kernel, argv) {
@@ -816,7 +817,18 @@ var code = new Inode({'name':'code', 'type':'dir',
     }
 });
 
-var root = new Inode({'name':'root', 'type':'dir',
-    'access': function() { return { 'output': '' }; }
+// 
+var aboutme = new Inode({'name':'about.txt', 'type':'file',
+    'access': function(kernel, argv) {
+        return {
+            'output': [
+                '**** About Me ****',
+                '',
+                'Name : Jarrod Baumann',
+                'Web  : http://j.arrod.org',
+                'Email: j@rrod.org',
+                ''
+            ],
+        }
+    }
 });
-
