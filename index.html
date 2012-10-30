@@ -59,6 +59,7 @@
             });
         }
 
+        // setup ipsh environment
         host = new Host(term, {});
         host.motd = [
             '*** welcome to jarrod\'s website ***',
@@ -68,6 +69,53 @@
             ' ',
         ];
 
+        host.kernel.mkdir('jarrod', '/home/');
+        host.kernel.name = 'j.arrod';
+        host.kernel.user.homedir = '/home/jarrod/';
+        host.kernel.user.pwd = '/home/jarrod/';
+        host.kernel.fs.add_inode(new Inode({'name': 'code', 'type': 'dir',
+            'path': '/home/jarrod/',
+            'access': function() {
+                return {
+                    'output': '*** Redirecting to github.com ***',
+                    'action': 'redirect',
+                    'value': 'http://github.com/jarrodb'
+                }
+            }
+        }));
+        host.kernel.fs.add_inode(new Inode({'name': 'work', 'type': 'dir',
+            'path': '/home/jarrod/',
+            'access': function() {
+                return {
+                    'output': '*** Redirecting to ipglobal.net ***',
+                    'action': 'redirect',
+                    'value': 'http://ipglobal.net'
+                }
+            }
+        }));
+        host.kernel.fs.add_inode(new Inode({'name':'about.txt', 'type':'file',
+            'path': '/home/jarrod/',
+            'access': function() {
+                return {
+                    'output': [
+                        '**** About Me ****',
+                        '',
+                        'Name : Jarrod Baumann',
+                        'Web  : http://j.arrod.org',
+                        'Email: j@rrod.org',
+                        ''
+                    ],
+                }
+            }
+        }));
+        host.kernel.fs.add_inode(new Inode({'name':'README', 'type':'file',
+            'path': '/root/',
+            'access': function() {
+                return {'output': '************ TOP SECRET *************'};
+            }
+        }));
+
+        // open to a clear screen...
         term.open();
         term.clear();
 

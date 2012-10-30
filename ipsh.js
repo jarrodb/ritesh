@@ -27,18 +27,14 @@ var Host = function(terminal, kwargs) {
 
     // essentials
     this.kernel.fs.add_inodes([
-        bash, cat, cd, df, exit, help, id, ls, make, mkdir,
-        pwd, sudo, touch, vim
+        amber, bash, cat, cd, df, echo, exit, help,
+        id, ls, make, mkdir, pwd, rm, sudo, touch, vim
     ]);
-
-    // move to personal extension
-    this.kernel.fs.add_inodes([code, work, aboutme, root_README, amber]);
 
 }; Host.prototype = {
     //public:
     inputHandler: function(input, ctrl) {
         input[0] = (input[0]) ? input[0].replace("^\.\/","") : input[0];
-        console.log(input);
         this.kernel.input(input);
     },
 
@@ -87,6 +83,12 @@ var Kernel = function(terminal, kwargs) {
                 break;
             case termKey.EOT: //^D
                 this._command(['exit']);
+                break;
+            case termKey.SO: //^N
+                if (this.terminal.closed) {
+                    this.terminal.open();
+                    this.terminal.clear();
+                }
                 break;
             case termKey.SOH: //^A
                 show_prompt = false;
@@ -249,12 +251,16 @@ var Kernel = function(terminal, kwargs) {
 
     //private:
     _prompt: function() {
+        var pwd = this.user.pwd;
+        if (pwd == this.user.homedir)
+            pwd = '~';
+
         return [
             this.user.name,
             "@",
             this.name,
             ":",
-            this.user.pwd,
+            pwd,
             this.user.prompt,
         ].join('');
     },
@@ -318,8 +324,9 @@ var Filesystem = function(kwargs) {
         var _path = this.PATH;
         var results = [];
 
-        if (_path.indexOf(pwd) == -1)
+        if (_path.indexOf(pwd) == -1) {
             _path.push(this.PATH.push(pwd)); // push current into path
+        }
 
         if (search && !cmd) return [];
 
@@ -511,11 +518,11 @@ var df = new Inode({'name': 'df', 'type': 'cmd', 'path': '/bin/',
             if (argv[1].substring(0,1) == '-') {
                 if (argv[1].slice(1).indexOf('h') != -1) {
                     output = [
-                        'Filesystem      Size   Used  Avail Capacity  iused    ifree %iused  Mounted on',
-                        '/dev/disk0s2   233Gi  112Gi  120Gi    49% 29540479 31528961   48%   /',
-                        'devfs          183Ki  183Ki    0Bi   100%      634        0  100%   /dev',
-                        'map -hosts       0Bi    0Bi    0Bi   100%        0        0  100%   /net',
-                        'map auto_home    0Bi    0Bi    0Bi   100%        0        0  100%   /home'
+                        'Filesystem      Size   Used  Avail Capacity  iused    ifree %%iused  Mounted on',
+                        '/dev/xvda      233Gi  112Gi  120Gi    49%% 29540479 31528961   48%%   /',
+                        'devfs          183Ki  183Ki    0Bi   100%%      634        0  100%%   /dev',
+                        'map -hosts       0Bi    0Bi    0Bi   100%%        0        0  100%%   /net',
+                        'map auto_home    0Bi    0Bi    0Bi   100%%        0        0  100%%   /home'
                     ];
                 }
             }
@@ -632,6 +639,55 @@ var ls = new Inode({
     }
 });
 
+var rm = new Inode({'name': 'rm', 'type': 'cmd', 'path': '/bin/',
+    'access': function(kernel, argv) {
+        if (argv.length == 1)
+            return {'output': 'rm [options] <file>'};
+        return {'output': 'nope.'};
+    }
+});
+
+var echo = new Inode({'name': 'echo', 'type': 'cmd', 'path': '/bin/',
+    'access': function(kernel, argv) {
+        if (argv.length == 1)
+            return {'output': ' '};
+
+        if (argv[1].substring(0,1) == '$') {
+            switch(argv[1].slice(1)) {
+                case 'shell':
+                case 'SHELL':
+                    return {'output': '/bin/bash'};
+                    break;
+                case 'path':
+                case 'PATH':
+                    return {'output': "["+kernel.fs.PATH.join(",")+"]"};
+                    break;
+                default:
+                    return {'output': ' '}
+            }
+        } else if (argv[1].substring(0,1) == '"') {
+            var output = argv[1].slice(1);
+            if (output.slice(-1)[0] != '"') {
+                // spans arguments
+                // does not take into account "string">>file.txt
+                for (var k=2; k<=argv.slice(1).length; k++) {
+                    if (argv[k].slice(-1)[0] != '"') {
+                        // look for closing double quote "
+                        output += ' '+argv[k];
+                    } else {
+                        output += ' '+argv[k].slice(0, argv[k].length-1);
+                        break;
+                    }
+                }
+            } else {
+                output = output.slice(0, output.length-1);
+            }
+            return {'output': output};
+        }
+
+        return {'output': argv.slice(1)};
+    }
+});
 
 var mkdir = new Inode({
     'name': 'mkdir',
@@ -810,9 +866,7 @@ var root_README = new Inode({'name':'README', 'type':'file', 'path':'/root/',
 });
 
 // dirs
-var work = new Inode({
-    'name':'work',
-    'type':'dir',
+var work = new Inode({'name': 'work', 'type': 'dir', 'path': '/home/guest/',
     'access': function(kernel, argv) {
         return {
             'output': '*** Redirecting to ipglobal.net ***',
@@ -822,7 +876,7 @@ var work = new Inode({
     }
 });
 
-var code = new Inode({'name':'code', 'type':'dir',
+var code = new Inode({'name':'code', 'type':'dir', 'path': '/home/guest/',
     'access': function() {
         return {
             'output': '*** Redirecting to github.com ***',
@@ -832,8 +886,10 @@ var code = new Inode({'name':'code', 'type':'dir',
     }
 });
 
-// 
+//
+
 var aboutme = new Inode({'name':'about.txt', 'type':'file',
+    'path': '/home/guest/',
     'access': function(kernel, argv) {
         return {
             'output': [
