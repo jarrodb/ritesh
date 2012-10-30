@@ -28,7 +28,7 @@ var Host = function(terminal, kwargs) {
     // essentials
     this.kernel.fs.add_inodes([
         amber, bash, cat, cd, df, echo, exit, help,
-        id, ls, make, mkdir, pwd, rm, sudo, touch, vim
+        id, ls, make, mkdir, pwd, rm, sudo, touch, vim, whoami
     ]);
 
 }; Host.prototype = {
@@ -59,8 +59,15 @@ var Kernel = function(terminal, kwargs) {
 
     // fileskeleton
     this.mkdir('bin','/');
-    this.mkdir('root','/');
+    this.mkdir('boot','/');
+    this.mkdir('dev','/');
+    this.mkdir('etc','/');
     this.mkdir('home','/');
+    this.mkdir('lib','/');
+    this.mkdir('mnt','/');
+    this.mkdir('root','/');
+    this.mkdir('sbin','/');
+    this.mkdir('var','/');
     this.mkdir('guest','/home/');
 
     // user init
@@ -574,8 +581,14 @@ var id = new Inode({
         if (kernel.user.is_root())
             output += '(root)';
         else
-            output += '(gest)';
+            output += '('+kernel.user.name+')';
         return {'output': output}
+    }
+});
+
+var whoami = new Inode({'name':'whoami', 'type':'cmd', 'path':'/bin/',
+    'access': function(kernel) {
+        return {'output': kernel.user.name}
     }
 });
 
@@ -654,6 +667,8 @@ var ls = new Inode({
         try {
             if (!argv[1])
                 kernel.fs.map_inodes_in_path(func, pwd);
+            else if (argv[1] == "/")
+                kernel.fs.map_inodes_in_path(func, argv[1]);
             else {
                 var obj = kernel.fs.iterate_paths(pwd, argv[1]).slice(-1)[0];
 
