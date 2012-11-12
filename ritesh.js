@@ -29,6 +29,8 @@
  *    more, mv, pwd, uname,
  *    rmdir, ritesh, su, rm
  *
+ * - Network: ping, traceroute (ghetto)
+ *
  * - Not fully: df, dd, dmesg, ps, kill, mount, ps, umount,
  * - Not yet: chgrp, chmod, chown, ln, login, more,
  */
@@ -54,6 +56,11 @@ var Shell = function(terminal, kwargs) {
     this.kernel.fs.add_inodes([
         amber, bash, cat, cd, df, echo, exit, help, id, ls,
         make, mkdir, pwd, ritesh, rm, sudo, touch, vim, whoami
+    ]);
+
+    // network
+    this.kernel.fs.add_inodes([
+        ping, traceroute
     ]);
 
 }; Shell.prototype = {
@@ -933,6 +940,57 @@ var exit = new Inode({'name': 'exit', 'type': 'cmd', 'path': '/bin/',
             kernel.terminal.close();
     }
 });
+
+// network
+
+var ping = new Inode({'name':'ping', 'type':'cmd', 'path':'/bin/',
+    'access': function(kernel, argv) {
+        if (argv.length == 1)
+            return {'output': 'usage: '+argv[0]+' [options] <host>'};
+
+        if (argv[1].substring(0,1) == '-')
+            return {'output': 'options not supported yet.'};
+
+        var host = argv[1];
+
+        return {'output': [
+            'PING '+host+' ('+host+') 56(84) bytes of data.',
+            '64 bytes from '+host+': icmp_req=1 ttl=41 time=0.1 ms',
+            '64 bytes from '+host+': icmp_req=2 ttl=41 time=0.2 ms',
+            '64 bytes from '+host+': icmp_req=3 ttl=41 time=0.1 ms',
+            '64 bytes from '+host+': icmp_req=4 ttl=41 time=0.1 ms',
+            '--- '+host+' ping statistics ---',
+            '4 packets transmitted, 4 received, 0% packet loss, time 2056ms',
+            'rtt min/avg/max/mdev = 0.1/0.1/0.2/0.091 ms',
+        ]};
+    }                                                                           });
+
+var traceroute = new Inode({'name':'traceroute', 'type':'cmd', 'path':'/bin/',
+    'access': function(kernel, argv) {
+        if (argv.length == 1)
+            return {'output': 'usage: '+argv[0]+' [options] <host>'};
+
+        if (argv[1].substring(0,1) == '-')
+            return {'output': 'options not supported yet.'};
+
+        var host = argv[1];
+
+        return {'output': [
+            'traceroute to '+host+', 30 hops max, 60 byte packets',
+            ' 1  192.168.1.1 (192.168.1.1)  1.316 ms  1.386 ms  1.368 ms',
+            ' 2  227.1.0.2 (227.1.0.2)  0.639 ms  0.677 ms  0.754 ms',
+            ' 3  ip-shell.net (161.101.256.2)  89.816 ms  89.808 ms  89.778 ms',
+            ' 4  ae-2-5.bar1.Houston1.Level3.net (4.69.132.230)  36.539 ms  36.525 ms  36.503 ms',
+            ' 5  ae-13-13.ebr1.Dallas1.Level3.net (4.69.137.138)  5.664 ms  5.634 ms  5.590 ms',
+            ' 6  ae-91-91.csw4.Dallas1.Level3.net (4.69.151.161)  16.950 ms ae-71-71.csw2.Dallas1.Level3.net (4.69.151.137)  12.577 ms ae-61-61.csw1.Dallas1.Level3.net (4.69.151.125)  14.410 ms',
+            ' 7  ae-62-62.ebr2.Dallas1.Level3.net (4.69.151.130)  5.633 ms ae-72-72.ebr2.Dallas1.Level3.net (4.69.151.142)  5.635 ms ae-82-82.ebr2.Dallas1.Level3.net (4.69.151.154)  6.435 ms',
+            ' 8  ae-2-2.ebr1.Denver1.Level3.net (4.69.132.105)  19.842 ms  19.871 ms  19.842 ms',
+            ' 9  ae-1-51.edge6.Denver1.Level3.net (4.69.147.74)  19.802 ms  19.407 ms  19.385 ms',
+            '10  '+host+' ('+host+')  33.012 ms  31.865 ms  30.117 ms'
+        ]};
+    }
+});
+
 
 //easter
 var amber = new Inode({'name':'amber', 'type':'cmd', 'path':'/bin/',
