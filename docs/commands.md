@@ -8,7 +8,7 @@ export const greet = defineCommand({
   summary: "say hello",
   usage: "greet [-l] [name...]",
   manual: "Greets each name, or the world.",
-  flags: { loud: { short: "l", type: "boolean", description: "shout" } },
+  flags: { l: { long: "loud", type: "boolean", description: "shout" } },
   run: async (p) => {
     const names = p.args.length ? p.args : ["world"]
     for (const n of names) await p.out(`hello, ${p.flags.loud ? n.toUpperCase() : n}\n`)
