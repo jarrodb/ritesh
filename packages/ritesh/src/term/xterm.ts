@@ -2,11 +2,11 @@ import { FitAddon } from "@xterm/addon-fit"
 import { Unicode11Addon } from "@xterm/addon-unicode11"
 import { WebLinksAddon } from "@xterm/addon-web-links"
 import { Terminal } from "@xterm/xterm"
-import type { Term } from "../contracts.js"
+import type { Term, Theme } from "../contracts.js"
 import { createTerm } from "./term.js"
 
 export interface BrowserTermOptions {
-  theme?: Record<string, string>
+  theme?: Theme
   font?: { family?: string; size?: number }
   screenReaderMode?: boolean
 }
@@ -30,7 +30,6 @@ export function createBrowserTerm(element: HTMLElement, options: BrowserTermOpti
     screenReaderMode: options.screenReaderMode ?? false,
     convertEol: false,
     cursorBlink: true,
-    theme: options.theme ?? {},
     ...(options.font?.family ? { fontFamily: options.font.family } : {}),
     ...(options.font?.size ? { fontSize: options.font.size } : {}),
     linkHandler: { activate: (_event, uri) => { safeOpen(uri) } },
@@ -53,5 +52,7 @@ export function createBrowserTerm(element: HTMLElement, options: BrowserTermOpti
   })
   xterm.open(element)
   fit.fit()
-  return createTerm(xterm, new Unicode11Addon(), { fit: () => { fit.fit() } })
+  const term = createTerm(xterm, new Unicode11Addon(), { fit: () => { fit.fit() } })
+  if (options.theme) term.setTheme(options.theme)
+  return term
 }

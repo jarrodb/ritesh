@@ -1,4 +1,4 @@
-import type { OutputPolicy, Term, TermSize } from "../contracts.js"
+import type { OutputPolicy, Term, TermSize, Theme } from "../contracts.js"
 import { createOutputFilter, filterOutput, isTerminalReply } from "./filter.js"
 
 interface Disposable {
@@ -19,6 +19,8 @@ export interface XtermLike {
   readonly unicode: { register(provider: UnicodeProvider): void; activeVersion: string }
   dispose(): void
   focus?(): void
+  /** Browser and headless xterm both have options; a theme change applies on the next render. */
+  readonly options?: { theme?: object }
 }
 
 export interface UnicodeAddonLike {
@@ -62,6 +64,9 @@ export function createTerm(xterm: XtermLike, unicode: UnicodeAddonLike, hooks: {
     },
     get size(): TermSize {
       return { cols: xterm.cols, rows: xterm.rows }
+    },
+    setTheme(theme: Theme): void {
+      if (xterm.options) xterm.options.theme = { ...theme }
     },
     width(codePoint: number): 0 | 1 | 2 {
       if (provider) return provider.wcwidth(codePoint)
