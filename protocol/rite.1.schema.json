@@ -1,0 +1,1051 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/jarrodb/ritesh/protocol/rite.1.schema.json",
+  "title": "rite.1 message",
+  "description": "One JSON-RPC 2.0 message of the rite.1 protocol. Unknown fields are allowed.",
+  "x-methods": {
+    "rite.hello": {
+      "kind": "request",
+      "params": "HelloParams",
+      "result": "HelloResult",
+      "direction": "c2s"
+    },
+    "fs.stat": {
+      "kind": "request",
+      "params": "PathParams",
+      "result": "StatResult",
+      "direction": "c2s"
+    },
+    "fs.list": {
+      "kind": "request",
+      "params": "PathParams",
+      "result": "ListResult",
+      "direction": "c2s"
+    },
+    "fs.read": {
+      "kind": "request",
+      "params": "ReadParams",
+      "result": "ReadResult",
+      "direction": "c2s"
+    },
+    "proc.start": {
+      "kind": "request",
+      "params": "StartParams",
+      "result": "StartResult",
+      "direction": "c2s"
+    },
+    "proc.complete": {
+      "kind": "request",
+      "params": "CompleteParams",
+      "result": "CompleteResult",
+      "direction": "c2s"
+    },
+    "proc.stdin": {
+      "kind": "notification",
+      "params": "StdinParams",
+      "result": null,
+      "direction": "c2s"
+    },
+    "proc.signal": {
+      "kind": "notification",
+      "params": "SignalParams",
+      "result": null,
+      "direction": "c2s"
+    },
+    "tty.resize": {
+      "kind": "notification",
+      "params": "ResizeParams",
+      "result": null,
+      "direction": "c2s"
+    },
+    "proc.stdout": {
+      "kind": "notification",
+      "params": "OutputParams",
+      "result": null,
+      "direction": "s2c"
+    },
+    "proc.stderr": {
+      "kind": "notification",
+      "params": "OutputParams",
+      "result": null,
+      "direction": "s2c"
+    },
+    "proc.exit": {
+      "kind": "notification",
+      "params": "ExitParams",
+      "result": null,
+      "direction": "s2c"
+    },
+    "fs.changed": {
+      "kind": "notification",
+      "params": "ChangedParams",
+      "result": null,
+      "direction": "s2c"
+    },
+    "term.notify": {
+      "kind": "notification",
+      "params": "NotifyParams",
+      "result": null,
+      "direction": "s2c"
+    }
+  },
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "method": {
+          "const": "rite.hello"
+        },
+        "params": {
+          "$ref": "#/$defs/HelloParams"
+        },
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "jsonrpc",
+        "method",
+        "params",
+        "id"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "method": {
+          "const": "fs.stat"
+        },
+        "params": {
+          "$ref": "#/$defs/PathParams"
+        },
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "jsonrpc",
+        "method",
+        "params",
+        "id"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "method": {
+          "const": "fs.list"
+        },
+        "params": {
+          "$ref": "#/$defs/PathParams"
+        },
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "jsonrpc",
+        "method",
+        "params",
+        "id"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "method": {
+          "const": "fs.read"
+        },
+        "params": {
+          "$ref": "#/$defs/ReadParams"
+        },
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "jsonrpc",
+        "method",
+        "params",
+        "id"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "method": {
+          "const": "proc.start"
+        },
+        "params": {
+          "$ref": "#/$defs/StartParams"
+        },
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "jsonrpc",
+        "method",
+        "params",
+        "id"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "method": {
+          "const": "proc.complete"
+        },
+        "params": {
+          "$ref": "#/$defs/CompleteParams"
+        },
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "jsonrpc",
+        "method",
+        "params",
+        "id"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "method": {
+          "const": "proc.stdin"
+        },
+        "params": {
+          "$ref": "#/$defs/StdinParams"
+        }
+      },
+      "required": [
+        "jsonrpc",
+        "method",
+        "params"
+      ],
+      "not": {
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "method": {
+          "const": "proc.signal"
+        },
+        "params": {
+          "$ref": "#/$defs/SignalParams"
+        }
+      },
+      "required": [
+        "jsonrpc",
+        "method",
+        "params"
+      ],
+      "not": {
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "method": {
+          "const": "tty.resize"
+        },
+        "params": {
+          "$ref": "#/$defs/ResizeParams"
+        }
+      },
+      "required": [
+        "jsonrpc",
+        "method",
+        "params"
+      ],
+      "not": {
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "method": {
+          "const": "proc.stdout"
+        },
+        "params": {
+          "$ref": "#/$defs/OutputParams"
+        }
+      },
+      "required": [
+        "jsonrpc",
+        "method",
+        "params"
+      ],
+      "not": {
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "method": {
+          "const": "proc.stderr"
+        },
+        "params": {
+          "$ref": "#/$defs/OutputParams"
+        }
+      },
+      "required": [
+        "jsonrpc",
+        "method",
+        "params"
+      ],
+      "not": {
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "method": {
+          "const": "proc.exit"
+        },
+        "params": {
+          "$ref": "#/$defs/ExitParams"
+        }
+      },
+      "required": [
+        "jsonrpc",
+        "method",
+        "params"
+      ],
+      "not": {
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "method": {
+          "const": "fs.changed"
+        },
+        "params": {
+          "$ref": "#/$defs/ChangedParams"
+        }
+      },
+      "required": [
+        "jsonrpc",
+        "method",
+        "params"
+      ],
+      "not": {
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "method": {
+          "const": "term.notify"
+        },
+        "params": {
+          "$ref": "#/$defs/NotifyParams"
+        }
+      },
+      "required": [
+        "jsonrpc",
+        "method",
+        "params"
+      ],
+      "not": {
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "$ref": "#/$defs/Response"
+    }
+  ],
+  "$defs": {
+    "errno": {
+      "enum": [
+        "ENOENT",
+        "ENOTDIR",
+        "EISDIR",
+        "EACCES",
+        "EPERM",
+        "EEXIST",
+        "ENOTEMPTY",
+        "EROFS",
+        "ELOOP",
+        "EINVAL",
+        "ENOTSUP",
+        "ENOSPC",
+        "EIO",
+        "EPIPE",
+        "ECANCELED",
+        "ETIMEDOUT",
+        "ENOTCONN"
+      ]
+    },
+    "HelloParams": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "rite.1"
+        },
+        "version": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        },
+        "session": {
+          "type": "string"
+        },
+        "tty": {
+          "type": "object",
+          "properties": {
+            "cols": {
+              "type": "integer"
+            },
+            "rows": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "cols",
+            "rows"
+          ]
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "protocol",
+        "version",
+        "token",
+        "tty",
+        "capabilities"
+      ]
+    },
+    "HelloResult": {
+      "type": "object",
+      "properties": {
+        "session": {
+          "type": "string"
+        },
+        "resumed": {
+          "type": "boolean"
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "summary": {
+                "type": "string"
+              },
+              "usage": {
+                "type": "string"
+              },
+              "flags": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "long": {
+                      "type": "string"
+                    },
+                    "short": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "enum": [
+                        "boolean",
+                        "string",
+                        "number"
+                      ]
+                    },
+                    "repeat": {
+                      "type": "boolean"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                }
+              },
+              "subcommands": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "summary": {
+                      "type": "string"
+                    },
+                    "usage": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "summary",
+                    "usage"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "name",
+              "summary",
+              "usage"
+            ]
+          }
+        },
+        "limits": {
+          "type": "object",
+          "properties": {
+            "maxMessageBytes": {
+              "type": "integer"
+            },
+            "maxProcs": {
+              "type": "integer"
+            },
+            "maxOutputBytes": {
+              "type": "integer"
+            },
+            "idleSeconds": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "maxMessageBytes",
+            "maxProcs",
+            "maxOutputBytes",
+            "idleSeconds"
+          ]
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "motd": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "session",
+        "resumed",
+        "commands",
+        "limits",
+        "capabilities"
+      ]
+    },
+    "PathParams": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "maxLength": 4096
+        }
+      },
+      "required": [
+        "path"
+      ]
+    },
+    "StatResult": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": [
+            "dir",
+            "file"
+          ]
+        },
+        "size": {
+          "type": "integer"
+        },
+        "mode": {
+          "type": "integer"
+        },
+        "mtime": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "size",
+        "mode",
+        "mtime"
+      ]
+    },
+    "ListResult": {
+      "type": "object",
+      "properties": {
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "type": {
+                "enum": [
+                  "dir",
+                  "file"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "type"
+            ]
+          }
+        },
+        "truncated": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "entries",
+        "truncated"
+      ]
+    },
+    "ReadParams": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "path"
+      ]
+    },
+    "ReadResult": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "string"
+        },
+        "eof": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "data",
+        "eof"
+      ]
+    },
+    "StartParams": {
+      "type": "object",
+      "properties": {
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "argv": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "cwd": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "stdio": {
+          "type": "object",
+          "properties": {
+            "stdin": {
+              "enum": [
+                "tty",
+                "pipe"
+              ]
+            },
+            "stdout": {
+              "enum": [
+                "tty",
+                "pipe"
+              ]
+            },
+            "stderr": {
+              "enum": [
+                "tty",
+                "pipe"
+              ]
+            }
+          },
+          "required": [
+            "stdin",
+            "stdout",
+            "stderr"
+          ]
+        }
+      },
+      "required": [
+        "pid",
+        "argv",
+        "cwd",
+        "env",
+        "stdio"
+      ]
+    },
+    "StartResult": {
+      "type": "object"
+    },
+    "CompleteParams": {
+      "type": "object",
+      "properties": {
+        "argv": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "argv",
+        "index"
+      ]
+    },
+    "CompleteResult": {
+      "type": "object",
+      "properties": {
+        "candidates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string"
+              },
+              "display": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "suffix": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "value"
+            ]
+          }
+        }
+      },
+      "required": [
+        "candidates"
+      ]
+    },
+    "StdinParams": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "pid": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "data": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "pid",
+            "data"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "pid": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "eof": {
+              "const": true
+            }
+          },
+          "required": [
+            "pid",
+            "eof"
+          ]
+        }
+      ]
+    },
+    "SignalParams": {
+      "type": "object",
+      "properties": {
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "signal": {
+          "enum": [
+            "INT",
+            "KILL"
+          ]
+        }
+      },
+      "required": [
+        "pid",
+        "signal"
+      ]
+    },
+    "ResizeParams": {
+      "type": "object",
+      "properties": {
+        "cols": {
+          "type": "integer"
+        },
+        "rows": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "cols",
+        "rows"
+      ]
+    },
+    "OutputParams": {
+      "type": "object",
+      "properties": {
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "data": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "pid",
+        "data"
+      ]
+    },
+    "ExitParams": {
+      "type": "object",
+      "properties": {
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "code": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      },
+      "required": [
+        "pid",
+        "code"
+      ]
+    },
+    "ChangedParams": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "kind": {
+          "enum": [
+            "create",
+            "delete",
+            "modify"
+          ]
+        }
+      },
+      "required": [
+        "path",
+        "kind"
+      ]
+    },
+    "NotifyParams": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "level": {
+          "enum": [
+            "info",
+            "warn",
+            "error"
+          ]
+        }
+      },
+      "required": [
+        "text",
+        "level"
+      ]
+    },
+    "AppErrorData": {
+      "type": "object",
+      "properties": {
+        "errno": {
+          "$ref": "#/$defs/errno"
+        },
+        "path": {
+          "type": "string",
+          "maxLength": 4096
+        }
+      },
+      "required": [
+        "errno"
+      ]
+    },
+    "Response": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "jsonrpc": {
+              "const": "2.0"
+            },
+            "id": {
+              "type": "integer"
+            },
+            "result": {}
+          },
+          "required": [
+            "jsonrpc",
+            "id",
+            "result"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "jsonrpc": {
+              "const": "2.0"
+            },
+            "id": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "error": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "data": {
+                  "$ref": "#/$defs/AppErrorData"
+                }
+              },
+              "required": [
+                "code",
+                "message"
+              ]
+            }
+          },
+          "required": [
+            "jsonrpc",
+            "id",
+            "error"
+          ]
+        }
+      ]
+    }
+  }
+}

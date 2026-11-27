@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>rite: a shell for the browser</title>
+<meta name="description" content="rite is a shell for the browser, on xterm.js. Its own language, real pipes, an in-memory filesystem, and a few secrets.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Martian+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="vendor/rite.css">
+<style>
+  :root {
+    --drench: oklch(0.53 0.18 33);
+    --drench-deep: oklch(0.42 0.14 30);
+    --paper: #f5eee3; /* the terminal theme's background, so the frame and the cells match */
+    --ink: oklch(0.24 0.03 40);
+    --ink-soft: oklch(0.38 0.04 40);
+    --on-drench: oklch(0.98 0.01 70);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--drench);
+    color: var(--on-drench);
+    font-family: "Bricolage Grotesque", system-ui, sans-serif;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: clamp(0.75rem, 2vw, 1.25rem);
+    padding: clamp(0.75rem, 3vw, 2rem);
+  }
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 1.5rem;
+  }
+  h1 {
+    margin: 0;
+    font-weight: 800;
+    font-size: clamp(2.25rem, 6vw, 3.75rem);
+    letter-spacing: -0.04em;
+    line-height: 0.9;
+  }
+  .what {
+    margin: 0;
+    font-weight: 500;
+    font-size: clamp(1rem, 1.6vw, 1.2rem);
+    max-width: 44ch;
+    flex: 1 1 22rem;
+  }
+  nav { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; font-weight: 500; }
+  nav a, nav button {
+    color: var(--on-drench);
+    font: inherit;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.2em;
+  }
+  nav a:hover, nav button:hover { text-decoration-color: var(--drench-deep); }
+  code { font-family: "Martian Mono", ui-monospace, monospace; font-size: 0.85em; }
+  .screen {
+    background: var(--paper);
+    border-radius: 14px;
+    padding: clamp(0.75rem, 2vw, 1.25rem);
+    min-height: 18rem;
+    box-shadow: 0 1px 0 oklch(0.98 0.01 70 / 0.5) inset, 0 24px 48px -24px oklch(0.3 0.1 30 / 0.55);
+    outline-offset: 4px;
+  }
+  .screen:focus-within { outline: 3px solid var(--on-drench); }
+  #term { height: 100%; }
+  footer { font-size: 0.9rem; color: var(--on-drench); }
+  footer kbd { font-family: "Martian Mono", ui-monospace, monospace; font-size: 0.8em; }
+  @media (prefers-reduced-motion: no-preference) {
+    .screen { animation: rise 600ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>rite</h1>
+  <p class="what">A shell for the browser. Its own language, real pipes, a filesystem you define, and a few secrets.</p>
+  <nav aria-label="Project">
+    <button type="button" id="copy" data-copy="npm install riteshjs"><code>npm install riteshjs</code></button>
+    <a href="https://www.jsdelivr.com/package/npm/riteshjs">CDN</a>
+    <a href="https://github.com/jarrodb/ritesh">GitHub</a>
+  </nav>
+</header>
+<main class="screen" aria-label="rite terminal">
+  <div id="term"></div>
+</main>
+<footer>Type <kbd>help</kbd>. Press <kbd>Esc</kbd> then <kbd>Tab</kbd> to leave the terminal.</footer>
+<script src="vendor/rite.bundle.min.js"></script>
+<script>
+  const copy = document.getElementById("copy")
+  copy.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(copy.dataset.copy); copy.firstChild.textContent = "copied" ; setTimeout(() => { copy.firstChild.textContent = copy.dataset.copy }, 1400) } catch {}
+  })
+  const theme = {
+    background: "#f5eee3", foreground: "#33241d", cursor: "#c7432a", cursorAccent: "#f5eee3",
+    selectionBackground: "#ecc9b8",
+    black: "#33241d", red: "#b3301c", green: "#2f6b3a", yellow: "#8a5a00", blue: "#2e4f8a", magenta: "#8a3a6e", cyan: "#1f6670", white: "#7a6a60",
+    brightBlack: "#5a4a40", brightRed: "#c7432a", brightGreen: "#3d8a4b", brightYellow: "#a36d00", brightBlue: "#3c63a8", brightMagenta: "#a3488a", brightCyan: "#2a808c", brightWhite: "#9a8a80",
+  }
+  const start = () => {
+  const rite = Rite.createRite({
+    element: document.getElementById("term"),
+    hostname: "rite.sh",
+    user: "guest",
+    motd: "type help. there is more than one way in.\n",
+    theme,
+    font: { family: "'Martian Mono', ui-monospace, monospace", size: 14 },
+    files: {
+      "/home/guest/about.txt": "rite is a shell for the browser, built on xterm.js.\nit started as a 2012 homepage experiment. it grew a language.\n",
+      "/home/guest/README": "try: ls /bin, man ls, echo hi | tee /tmp/x, cat /tmp/x\n",
+    },
+    inodes: {
+      "/home/guest/code": { type: "action", action: { open: "https://github.com/jarrodb/ritesh" } },
+    },
+  })
+  window.addEventListener("resize", () => rite.fit())
+  rite.focus()
+  }
+  // xterm measures its cells at creation: wait for the font.
+  document.fonts.load("14px 'Martian Mono'").then(start, start)
+</script>
+</body>
+</html>

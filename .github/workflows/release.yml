@@ -1,0 +1,120 @@
+name: release
+
+# On a signed tag vX.Y.Z pushed by the owner: verify the signature, run every
+# gate, publish riteshjs to npm by trusted publishing (OIDC, provenance, no
+# token), tag the Go module server/vX.Y.Z on the same commit, check the CDN
+# serves the published bytes, and write the GitHub release with SRI hashes.
+
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    environment: release
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Verify the tag is signed by the owner
+        env:
+          SIGNING_KEY: ${{ vars.RELEASE_SIGNING_KEY }}
+        run: |
+          test -n "$SIGNING_KEY" || { echo "set the RELEASE_SIGNING_KEY variable (the owner's public key)"; exit 1; }
+          git fetch -f origin "refs/tags/${GITHUB_REF_NAME}:refs/tags/${GITHUB_REF_NAME}"
+          if printf '%s' "$SIGNING_KEY" | grep -q "BEGIN PGP"; then
+            printf '%s\n' "$SIGNING_KEY" | gpg --import
+            git tag -v "$GITHUB_REF_NAME"
+          else
+            printf 'owner %s\n' "$SIGNING_KEY" > allowed_signers
+            git -c gpg.format=ssh -c gpg.ssh.allowedSignersFile=allowed_signers tag -v "$GITHUB_REF_NAME"
+          fi
+
+      - name: The tag matches the package version
+        run: |
+          want="${GITHUB_REF_NAME#v}"
+          got=$(node -p "require('./packages/ritesh/package.json').version")
+          test "$want" = "$got" || { echo "tag $want, package.json $got"; exit 1; }
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: server/go.mod
+
+      - run: npm ci
+      - run: npm run sync:protocol && git diff --exit-code
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - run: npm run check:package
+      - run: cd server && go vet ./... && go test -race -count=1 ./...
+
+      - name: Pack and hash
+        id: pack
+        working-directory: packages/ritesh
+        run: |
+          npm pack --json > ../../pack.json
+          tgz=$(node -p "require('../../pack.json')[0].filename")
+          mkdir -p ../../packed && tar -xzf "$tgz" -C ../../packed
+          for f in rite.bundle.min.js rite.css; do
+            h=$(openssl dgst -sha384 -binary "../../packed/package/dist/$f" | openssl base64 -A)
+            echo "$f sha384-$h" >> ../../sri.txt
+          done
+          cat ../../sri.txt
+
+      - name: Publish to npm (trusted publishing, provenance)
+        working-directory: packages/ritesh
+        run: npm publish --provenance --access public
+
+      - name: Tag the Go module on the same commit
+        run: |
+          git tag "server/${GITHUB_REF_NAME}" "$GITHUB_SHA"
+          git push origin "server/${GITHUB_REF_NAME}"
+
+      - name: The CDNs serve the published bytes
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          for f in rite.bundle.min.js rite.css; do
+            for url in "https://cdn.jsdelivr.net/npm/riteshjs@$v/dist/$f" "https://unpkg.com/riteshjs@$v/dist/$f"; do
+              ok=""
+              for i in 1 2 3 4 5 6 7 8 9 10; do
+                if curl -sfL "$url" -o fetched && cmp -s fetched "packed/package/dist/$f"; then ok=1; break; fi
+                sleep 30
+              done
+              test -n "$ok" || { echo "$url does not serve the published $f"; exit 1; }
+            done
+          done
+
+      - name: GitHub release with CDN URLs and SRI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          js=$(grep '^rite.bundle.min.js ' sri.txt | cut -d' ' -f2)
+          css=$(grep '^rite.css ' sri.txt | cut -d' ' -f2)
+          {
+            echo "npm: \`npm install riteshjs@$v\`"
+            echo
+            echo '```html'
+            echo "<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/riteshjs@$v/dist/rite.css\" integrity=\"$css\" crossorigin=\"anonymous\">"
+            echo "<script src=\"https://cdn.jsdelivr.net/npm/riteshjs@$v/dist/rite.bundle.min.js\" integrity=\"$js\" crossorigin=\"anonymous\"></script>"
+            echo '```'
+            echo
+            echo "Go: \`go get github.com/jarrodb/ritesh/server@server/$GITHUB_REF_NAME\`"
+          } > notes.md
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md

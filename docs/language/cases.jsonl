@@ -1,0 +1,96 @@
+{"line": "echo hi", "parse": "ok", "words": [["echo", "hi"]], "stdout": "hi\n", "exit": 0}
+{"line": "echo  a   b", "parse": "ok", "words": [["echo", "a", "b"]], "stdout": "a b\n", "exit": 0}
+{"line": "echo 'a  b'", "parse": "ok", "words": [["echo", "a  b"]], "stdout": "a  b\n", "exit": 0}
+{"line": "echo a'b'\"c\"", "parse": "ok", "words": [["echo", "abc"]], "stdout": "abc\n", "exit": 0}
+{"line": "echo 'it''s'", "parse": "ok", "words": [["echo", "its"]], "stdout": "its\n", "exit": 0}
+{"line": "echo '$HOME'", "parse": "ok", "words": [["echo", "$HOME"]], "stdout": "$HOME\n", "exit": 0}
+{"line": "echo \"$HOME\"", "parse": "ok", "words": [["echo", "/home/guest"]], "stdout": "/home/guest\n", "exit": 0}
+{"line": "echo \"a\\\"b\"", "parse": "ok", "words": [["echo", "a\"b"]], "stdout": "a\"b\n", "exit": 0}
+{"line": "echo \"a\\nb\"", "parse": "ok", "words": [["echo", "a\\nb"]], "stdout": "a\\nb\n", "exit": 0}
+{"line": "echo \"\\$HOME\"", "parse": "ok", "words": [["echo", "$HOME"]], "stdout": "$HOME\n", "exit": 0}
+{"line": "echo a\\ b", "parse": "ok", "words": [["echo", "a b"]], "stdout": "a b\n", "exit": 0}
+{"line": "echo 'open", "parse": "incomplete"}
+{"line": "echo \"open", "parse": "incomplete"}
+{"line": "echo a \\", "parse": "incomplete"}
+{"line": "echo a |", "parse": "incomplete"}
+{"line": "echo a &&", "parse": "incomplete"}
+{"line": "echo a#b", "parse": "ok", "words": [["echo", "a#b"]], "stdout": "a#b\n", "exit": 0}
+{"line": "echo a #b", "parse": "ok", "words": [["echo", "a"]], "stdout": "a\n", "exit": 0}
+{"line": "# just a comment", "parse": "ok", "words": [], "stdout": "", "exit": 0}
+{"line": "", "parse": "ok", "words": [], "stdout": "", "exit": 0}
+{"line": "echo $UNSET", "parse": "ok", "words": [["echo"]], "stdout": "\n", "exit": 0}
+{"line": "echo x${UNSET}y", "parse": "ok", "words": [["echo", "xy"]], "stdout": "xy\n", "exit": 0}
+{"line": "X=1; echo $X", "parse": "ok", "words": [[], ["echo", "1"]], "stdout": "1\n", "exit": 0}
+{"line": "X='a b'; echo $X", "parse": "ok", "words": [[], ["echo", "a b"]], "stdout": "a b\n", "exit": 0}
+{"line": "X=1 env | grep '^X='", "parse": "ok", "stdout": "X=1\n", "exit": 0}
+{"line": "X=1 true; echo \"[$X]\"", "parse": "ok", "stdout": "[]\n", "exit": 0}
+{"line": "echo $", "parse": "ok", "words": [["echo", "$"]], "stdout": "$\n", "exit": 0}
+{"line": "echo a$-b", "parse": "ok", "words": [["echo", "a$-b"]], "stdout": "a$-b\n", "exit": 0}
+{"line": "UID=0", "parse": "ok", "stderr": "rite: UID: read-only variable\n", "exit": 1}
+{"line": "USER=root; whoami", "parse": "ok", "stdout": "guest\n", "exit": 0}
+{"line": "false; echo $?", "parse": "ok", "stdout": "1\n", "exit": 0}
+{"line": "echo ~", "parse": "ok", "words": [["echo", "/home/guest"]], "stdout": "/home/guest\n", "exit": 0}
+{"line": "echo ~/x", "parse": "ok", "words": [["echo", "/home/guest/x"]], "stdout": "/home/guest/x\n", "exit": 0}
+{"line": "echo '~'", "parse": "ok", "words": [["echo", "~"]], "stdout": "~\n", "exit": 0}
+{"line": "echo a~", "parse": "ok", "words": [["echo", "a~"]], "stdout": "a~\n", "exit": 0}
+{"line": "echo ~root", "parse": "syntax", "error": "'~root' is not supported", "exit": 2}
+{"line": "X='*'; echo $X", "parse": "ok", "files": {"/home/guest/a": ""}, "stdout": "*\n", "exit": 0}
+{"line": "echo *", "parse": "ok", "files": {"/home/guest/b": "", "/home/guest/a": "", "/home/guest/.h": ""}, "stdout": "a b\n", "exit": 0}
+{"line": "echo '*'", "parse": "ok", "stdout": "*\n", "exit": 0}
+{"line": "echo *.none", "parse": "ok", "stderr": "rite: no matches found: *.none\n", "exit": 1}
+{"line": "echo [ab]", "parse": "ok", "files": {"/home/guest/a": ""}, "stdout": "a\n", "exit": 0}
+{"line": "echo a?b", "parse": "ok", "words": [["echo", "a?b"]], "stdout": "a?b\n", "exit": 0}
+{"line": "echo https://x/?a=1", "parse": "ok", "words": [["echo", "https://x/?a=1"]], "stdout": "https://x/?a=1\n", "exit": 0}
+{"line": "true && echo y", "parse": "ok", "stdout": "y\n", "exit": 0}
+{"line": "false && echo y", "parse": "ok", "stdout": "", "exit": 1}
+{"line": "false || echo y", "parse": "ok", "stdout": "y\n", "exit": 0}
+{"line": "true || echo y", "parse": "ok", "stdout": "", "exit": 0}
+{"line": "false || false && echo y", "parse": "ok", "stdout": "", "exit": 1}
+{"line": "true || false && echo y", "parse": "ok", "stdout": "y\n", "exit": 0}
+{"line": "echo a; echo b;", "parse": "ok", "stdout": "a\nb\n", "exit": 0}
+{"line": "echo hi | cat", "parse": "ok", "stdout": "hi\n", "exit": 0}
+{"line": "printf_missing", "parse": "ok", "stderr": "rite: command not found: printf_missing\n", "exit": 127}
+{"line": "echo a | false", "parse": "ok", "stdout": "", "exit": 1}
+{"line": "false | echo a", "parse": "ok", "stdout": "a\n", "exit": 0}
+{"line": "echo hi > /tmp/x; cat /tmp/x", "parse": "ok", "stdout": "hi\n", "exit": 0}
+{"line": "echo a > /tmp/x; echo b >> /tmp/x; cat /tmp/x", "parse": "ok", "stdout": "a\nb\n", "exit": 0}
+{"line": "> /tmp/x", "parse": "syntax", "error": "redirect with no command", "exit": 2}
+{"line": "cat < /tmp/in", "parse": "ok", "files": {"/tmp/in": "x\n"}, "stdout": "x\n", "exit": 0}
+{"line": "cat /none 2> /tmp/e; cat /tmp/e", "parse": "ok", "stdout": "cat: /none: no such file or directory\n", "exit": 0}
+{"line": "cat /none > /tmp/o 2>&1; cat /tmp/o", "parse": "ok", "stdout": "cat: /none: no such file or directory\n", "exit": 0}
+{"line": "cat /none 2>&1 > /tmp/o", "parse": "ok", "stdout": "cat: /none: no such file or directory\n", "exit": 1}
+{"line": "echo err >&2", "parse": "ok", "stderr": "err\n", "exit": 0}
+{"line": "X='a b'; echo hi > $X", "parse": "ok", "stdout": "", "exit": 0}
+{"line": "echo hi > /tmp", "parse": "ok", "stderr": "rite: /tmp: is a directory\n", "exit": 1}
+{"line": "echo > /tmp/*", "parse": "ok", "files": {"/tmp/a": "", "/tmp/b": ""}, "stderr": "rite: ambiguous redirect\n", "exit": 1}
+{"line": "cd /tmp > /tmp/o; pwd", "parse": "ok", "stdout": "/tmp\n", "exit": 0}
+{"line": "echo `x`", "parse": "syntax", "error": "'`' is not supported", "exit": 2}
+{"line": "echo $(x)", "parse": "syntax", "error": "'$(' is not supported", "exit": 2}
+{"line": "(echo)", "parse": "syntax", "error": "'(' is not supported", "exit": 2}
+{"line": "echo {\"a\":1}", "parse": "syntax", "error": "'{' is not supported", "exit": 2}
+{"line": "sleep 1 &", "parse": "syntax", "error": "'&' is not supported", "exit": 2}
+{"line": "cat <<EOF", "parse": "syntax", "error": "'<<' is not supported", "exit": 2}
+{"line": "echo $1", "parse": "syntax", "error": "'$1' is not supported", "exit": 2}
+{"line": "echo $@", "parse": "syntax", "error": "'$@' is not supported", "exit": 2}
+{"line": "if true", "parse": "syntax", "error": "'if' is not supported", "exit": 2}
+{"line": "for x", "parse": "syntax", "error": "'for' is not supported", "exit": 2}
+{"line": "! true", "parse": "syntax", "error": "'!' is not supported", "exit": 2}
+{"line": "[[ x ]]", "parse": "syntax", "error": "'[[' is not supported", "exit": 2}
+{"line": "a |& b", "parse": "syntax", "error": "'|&' is not supported", "exit": 2}
+{"line": "a &> f", "parse": "syntax", "error": "'&>' is not supported", "exit": 2}
+{"line": "echo https://x/?a=1&b=2", "parse": "syntax", "error": "quote the argument", "exit": 2}
+{"line": "echo 'https://x/?a=1&b=2'", "parse": "ok", "words": [["echo", "https://x/?a=1&b=2"]], "stdout": "https://x/?a=1&b=2\n", "exit": 0}
+{"line": "echo '{\"a\":1}'", "parse": "ok", "words": [["echo", "{\"a\":1}"]], "stdout": "{\"a\":1}\n", "exit": 0}
+{"line": "echo if", "parse": "ok", "words": [["echo", "if"]], "stdout": "if\n", "exit": 0}
+{"line": "alias ll='ls -l'; alias ll", "parse": "ok", "stdout": "ll='ls -l'\n", "exit": 0}
+{"line": "alias e='echo a; echo'; e b", "parse": "ok", "stdout": "a\nb\n", "exit": 0}
+{"line": "alias echo='echo x'; echo y", "parse": "ok", "stdout": "x y\n", "exit": 0}
+{"line": "echo \"$(x)\"", "parse": "syntax", "error": "'$(' is not supported", "exit": 2}
+{"line": "echo \"a`b`\"", "parse": "syntax", "error": "'`' is not supported", "exit": 2}
+{"line": "echo \"$1\"", "parse": "syntax", "error": "'$1' is not supported", "exit": 2}
+{"line": "echo \"${X:-y}\"", "parse": "syntax", "error": "is not supported", "exit": 2}
+{"line": "echo '$(x)'", "parse": "ok", "words": [["echo", "$(x)"]], "stdout": "$(x)\n", "exit": 0}
+{"line": "echo a\\\nb", "parse": "ok", "words": [["echo", "ab"]], "stdout": "ab\n", "exit": 0}
+{"line": "echo \"a\\\nb\"", "parse": "ok", "words": [["echo", "ab"]], "stdout": "ab\n", "exit": 0}
+{"line": "echo \"cost: 5$\"", "parse": "ok", "words": [["echo", "cost: 5$"]], "stdout": "cost: 5$\n", "exit": 0}
+{"line": "echo \"a$'b\"", "parse": "ok", "words": [["echo", "a$'b"]], "stdout": "a$'b\n", "exit": 0}
