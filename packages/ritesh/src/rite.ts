@@ -129,7 +129,12 @@ export function createRiteOn(term: Term, options: Omit<HostOptions, "element">):
 
   const ready = (async () => {
     const motd = await vfs.read("/etc/motd", "/").catch(() => "")
-    if (motd) await term.write(motd.endsWith("\n") ? motd : motd + "\n", "plain")
+    // Only the host's own motd keeps its colors; one a mount serves is
+    // plain, so it cannot restyle or hide the prompt.
+    const policy = options.motd !== undefined && motd === options.motd ? "sgr" : "plain"
+    if (motd) await term.write(motd.endsWith("\n") ? motd : motd + "\n", policy)
+    // A color the motd left on must not reach the prompt.
+    if (policy === "sgr") await term.write("\x1b[0m", "sgr")
   })()
   void ready.then(loop)
 
@@ -142,6 +147,9 @@ export function createRiteOn(term: Term, options: Omit<HostOptions, "element">):
     print: (text) => { editor.notify(text) },
     focus: () => { term.focus() },
     fit: () => { term.fit() },
+    get size() { return term.size },
+    onResize: (listener) => term.onResize(listener),
+    setTheme: (theme) => { term.setTheme(theme) },
     dispose: () => {
       if (state.disposed) return
       state.disposed = true

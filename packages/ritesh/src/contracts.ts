@@ -487,6 +487,8 @@ export interface Term {
   onInput(listener: (data: string) => void): () => void
   onResize(listener: (size: TermSize) => void): () => void
   readonly size: TermSize
+  /** Replace the terminal's colors (xterm ITheme keys). */
+  setTheme(theme: Theme): void
   /** Display width of one code point: 0, 1, or 2. */
   width(codePoint: number): 0 | 1 | 2
   focus(): void
@@ -519,10 +521,17 @@ export interface Kernel {
 
 export type HistoryMode = "local" | "memory" | false
 
+/** Terminal colors: xterm's ITheme keys (strings, and extendedAnsi as a list). */
+export interface Theme {
+  [key: string]: string | readonly string[] | undefined
+  extendedAnsi?: readonly string[]
+}
+
 export interface HostOptions {
   element: HTMLElement
   hostname?: string
   user?: string
+  /** Printed before the first prompt; SGR colors are kept, every other escape sequence is dropped. */
   motd?: string
   files?: Record<string, FileContent>
   inodes?: Record<string, InodeSpec>
@@ -532,7 +541,8 @@ export interface HostOptions {
   remote?: RemoteHandle
   sudo?: SudoPolicy
   history?: HistoryMode
-  theme?: Record<string, string>
+  /** xterm ITheme keys; `themes` has brass, tide, dusk (dark) and paper (light) ready-made. */
+  theme?: Theme
   /** The terminal's font. Load web fonts before createRite so the cell size is measured right. */
   font?: { family?: string; size?: number }
   screenReaderMode?: boolean
@@ -558,5 +568,11 @@ export interface Rite {
   print(text: string): void
   focus(): void
   fit(): void
+  /** The terminal's size in cells. */
+  readonly size: TermSize
+  /** Called after the terminal changes size (a fit, a resize). Returns an unsubscribe. */
+  onResize(listener: (size: TermSize) => void): () => void
+  /** Replace the terminal's colors, such as `themes.paper`. */
+  setTheme(theme: Theme): void
   dispose(): void
 }

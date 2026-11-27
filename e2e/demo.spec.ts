@@ -62,3 +62,38 @@ test("has no serious accessibility violations outside the terminal", async ({ pa
   const serious = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical")
   expect(serious.map((v) => v.id)).toEqual([])
 })
+
+test("theme switches the terminal and the page, and is remembered", async ({ page }) => {
+  await ready(page)
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "brass")
+  await page.keyboard.type("theme paper\n")
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "paper")
+  await expect.poll(() => page.locator("#term .xterm").evaluate((e) => getComputedStyle(e).backgroundColor)).toBe("rgb(245, 238, 227)")
+  await page.reload()
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "paper")
+  await page.getByRole("button", { name: /switch to brass/ }).click()
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "brass")
+})
+
+test("the status line runs its commands in the shell", async ({ page }) => {
+  await ready(page)
+  await page.getByRole("button", { name: "cdn" }).click()
+  const version = await page.evaluate(() => (window as unknown as { Rite: { VERSION: string } }).Rite.VERSION)
+  await expect.poll(() => screen(page)).toContain(`riteshjs@${version}/dist/rite.bundle.min.js`)
+})
+
+test("the focused terminal marks the title bar's edge", async ({ page }) => {
+  await ready(page)
+  const edge = () => page.locator(".title").evaluate((e) => getComputedStyle(e).borderBottomColor)
+  const focused = await edge()
+  await page.keyboard.press("Escape")
+  await page.keyboard.press("Tab")
+  await expect.poll(edge).not.toBe(focused)
+})
+
+test("fits a phone without scrolling sideways", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await ready(page)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBe(0)
+  await expect.poll(() => screen(page)).toContain("type help. more than one way in.")
+})

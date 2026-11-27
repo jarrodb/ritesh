@@ -1,130 +1,277 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="brass">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>rite: a shell for the browser</title>
 <meta name="description" content="rite is a shell for the browser, on xterm.js. Its own language, real pipes, an in-memory filesystem, and a few secrets.">
+<meta name="theme-color" content="#17150f">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Martian+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;600&display=swap">
 <link rel="stylesheet" href="vendor/rite.css">
 <style>
+  /* The page is a terminal window: a title bar, the terminal edge to edge,
+     and a tmux status line. Chrome colors follow the terminal theme. */
   :root {
-    --drench: oklch(0.53 0.18 33);
-    --drench-deep: oklch(0.42 0.14 30);
-    --paper: #f5eee3; /* the terminal theme's background, so the frame and the cells match */
-    --ink: oklch(0.24 0.03 40);
-    --ink-soft: oklch(0.38 0.04 40);
-    --on-drench: oklch(0.98 0.01 70);
+    --mono: "Martian Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  [data-theme="brass"] {
+    --bg: #17150f; --bar: #1f1c15; --bar-fg: #b5ab95; --rule: #2e2a20;
+    --accent: #e0ac4c; --on-accent: #17150f;
+    color-scheme: dark;
+  }
+  [data-theme="tide"] {
+    --bg: #0e1417; --bar: #141c20; --bar-fg: #9fb0b5; --rule: #22303a;
+    --accent: #63c1c9; --on-accent: #0e1417;
+    color-scheme: dark;
+  }
+  [data-theme="dusk"] {
+    --bg: #15121b; --bar: #1c1824; --bar-fg: #aaa1b8; --rule: #2b2536;
+    --accent: #b6a1e0; --on-accent: #15121b;
+    color-scheme: dark;
+  }
+  [data-theme="paper"] {
+    --bg: #f5eee3;
+    --bar: #ebe2d5;
+    --bar-fg: #5a4a40;
+    --rule: #ddd1c2;
+    --accent: #b3301c;
+    --on-accent: #f5eee3;
+    color-scheme: light;
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
   body {
-    background: var(--drench);
-    color: var(--on-drench);
-    font-family: "Bricolage Grotesque", system-ui, sans-serif;
+    height: 100dvh;
+    overflow: hidden;
     display: grid;
-    grid-template-rows: auto 1fr auto;
-    gap: clamp(0.75rem, 2vw, 1.25rem);
-    padding: clamp(0.75rem, 3vw, 2rem);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    background: var(--bg);
+    color: var(--bar-fg);
+    font: 12px/1 var(--mono);
   }
-  header {
+  button, a { font: inherit; color: inherit; }
+
+  .title {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 1rem;
+    padding: calc(0.55rem + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 0.55rem max(16px, env(safe-area-inset-left, 0px));
+    background: var(--bar);
+    border-bottom: 2px solid var(--rule);
+    white-space: nowrap;
+  }
+  /* The line under the title bar is the focused pane's border, as in tmux. */
+  body:has(#term:focus-within) .title { border-bottom-color: var(--accent); }
+  .title h1 { grid-column: 2; margin: 0; font-size: inherit; font-weight: 400; overflow: hidden; text-overflow: ellipsis; }
+  .title h1 b { font-weight: 600; }
+  .title .size { font-variant-numeric: tabular-nums; }
+  .title button {
+    justify-self: end;
+    background: none;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.3rem 0.55rem;
+    cursor: pointer;
+  }
+  .title button:hover { border-color: var(--bar-fg); }
+
+  #term { min-width: 0; min-height: 0; overflow: hidden; }
+  /* xterm paints its own black behind the padding and the rows that do not fill a whole line. */
+  #term, #term .xterm, #term .xterm-viewport { background: var(--bg); }
+  #term .xterm {
+    height: 100%;
+    padding: 0.75rem max(16px, env(safe-area-inset-right, 0px)) 0.75rem max(16px, env(safe-area-inset-left, 0px));
+  }
+
+  .status {
     display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.5rem 1.5rem;
+    align-items: stretch;
+    padding: 0 max(16px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(16px, env(safe-area-inset-left, 0px));
+    background: var(--accent);
+    color: var(--on-accent);
+    white-space: nowrap;
+    line-height: 1.9;
   }
-  h1 {
-    margin: 0;
-    font-weight: 800;
-    font-size: clamp(2.25rem, 6vw, 3.75rem);
-    letter-spacing: -0.04em;
-    line-height: 0.9;
-  }
-  .what {
-    margin: 0;
-    font-weight: 500;
-    font-size: clamp(1rem, 1.6vw, 1.2rem);
-    max-width: 44ch;
-    flex: 1 1 22rem;
-  }
-  nav { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; font-weight: 500; }
-  nav a, nav button {
-    color: var(--on-drench);
-    font: inherit;
+  .status .session { font-weight: 600; padding-right: 1.25ch; }
+  .status nav { display: flex; gap: 1.5ch; min-width: 0; overflow: hidden; }
+  .status nav button, .status nav a {
     background: none;
     border: 0;
     padding: 0;
     cursor: pointer;
     text-decoration: underline;
-    text-decoration-thickness: 2px;
-    text-underline-offset: 0.2em;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
   }
-  nav a:hover, nav button:hover { text-decoration-color: var(--drench-deep); }
-  code { font-family: "Martian Mono", ui-monospace, monospace; font-size: 0.85em; }
-  .screen {
-    background: var(--paper);
-    border-radius: 14px;
-    padding: clamp(0.75rem, 2vw, 1.25rem);
-    min-height: 18rem;
-    box-shadow: 0 1px 0 oklch(0.98 0.01 70 / 0.5) inset, 0 24px 48px -24px oklch(0.3 0.1 30 / 0.55);
-    outline-offset: 4px;
-  }
-  .screen:focus-within { outline: 3px solid var(--on-drench); }
-  #term { height: 100%; }
-  footer { font-size: 0.9rem; color: var(--on-drench); }
-  footer kbd { font-family: "Martian Mono", ui-monospace, monospace; font-size: 0.8em; }
-  @media (prefers-reduced-motion: no-preference) {
-    .screen { animation: rise 600ms cubic-bezier(0.22, 1, 0.36, 1) both; }
-    @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+  .status .right { margin-left: auto; display: flex; gap: 2ch; padding-left: 2ch; }
+  .status kbd { font: inherit; font-weight: 600; }
+  .status time { font-variant-numeric: tabular-nums; }
+
+  :focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+  @media (max-width: 640px) {
+    .title { grid-template-columns: 1fr auto; }
+    .title h1 { grid-column: 1; }
+    .status .hint, .status .window, .title .app, .title .label { display: none; }
   }
 </style>
 </head>
 <body>
-<header>
-  <h1>rite</h1>
-  <p class="what">A shell for the browser. Its own language, real pipes, a filesystem you define, and a few secrets.</p>
-  <nav aria-label="Project">
-    <button type="button" id="copy" data-copy="npm install riteshjs"><code>npm install riteshjs</code></button>
-    <a href="https://www.jsdelivr.com/package/npm/riteshjs">CDN</a>
-    <a href="https://github.com/jarrodb/ritesh">GitHub</a>
-  </nav>
+<header class="title">
+  <h1><b>guest@rite.sh</b><span class="app"> · rite</span> · <span class="size" id="size">80×24</span></h1>
+  <button type="button" id="theme" aria-label="theme: brass, switch to tide"><span class="label">theme: </span><span id="theme-name">brass</span></button>
 </header>
-<main class="screen" aria-label="rite terminal">
-  <div id="term"></div>
-</main>
-<footer>Type <kbd>help</kbd>. Press <kbd>Esc</kbd> then <kbd>Tab</kbd> to leave the terminal.</footer>
+<main id="term" aria-label="rite terminal"></main>
+<footer class="status">
+  <span class="session">[rite]<span class="window"> 0:rite*</span></span>
+  <nav aria-label="Project">
+    <button type="button" data-run="install">install</button>
+    <button type="button" data-run="cdn">cdn</button>
+    <a href="https://github.com/jarrodb/ritesh">source</a>
+  </nav>
+  <span class="right">
+    <span class="hint"><kbd>esc</kbd> <kbd>tab</kbd> leaves</span>
+    <time id="clock"></time>
+  </span>
+</footer>
 <script src="vendor/rite.bundle.min.js"></script>
 <script>
-  const copy = document.getElementById("copy")
-  copy.addEventListener("click", async () => {
-    try { await navigator.clipboard.writeText(copy.dataset.copy); copy.firstChild.textContent = "copied" ; setTimeout(() => { copy.firstChild.textContent = copy.dataset.copy }, 1400) } catch {}
-  })
-  const theme = {
-    background: "#f5eee3", foreground: "#33241d", cursor: "#c7432a", cursorAccent: "#f5eee3",
-    selectionBackground: "#ecc9b8",
-    black: "#33241d", red: "#b3301c", green: "#2f6b3a", yellow: "#8a5a00", blue: "#2e4f8a", magenta: "#8a3a6e", cyan: "#1f6670", white: "#7a6a60",
-    brightBlack: "#5a4a40", brightRed: "#c7432a", brightGreen: "#3d8a4b", brightYellow: "#a36d00", brightBlue: "#3c63a8", brightMagenta: "#a3488a", brightCyan: "#2a808c", brightWhite: "#9a8a80",
+  const INSTALL = "npm install riteshjs"
+  // The bundle names its own version, so the tags follow every release.
+  const CDN = `https://cdn.jsdelivr.net/npm/riteshjs@${Rite.VERSION}/dist/`
+  const NAMES = ["brass", "tide", "dusk", "paper"]
+  const DEFAULT = "brass"
+  const root = document.documentElement
+  const themeButton = document.getElementById("theme")
+
+  const stored = () => { try { return localStorage.getItem("rite-theme") } catch { return null } }
+  const initial = NAMES.includes(stored()) ? stored() : DEFAULT
+
+  // Two rows of block letters, then what it is and what to type. Lines stay
+  // within 36 columns so a phone shows them whole.
+  // Bold in the theme's own foreground, so the text follows any theme.
+  const accent = (s) => `\x1b[1m${s}\x1b[0m`
+  const dim = (s) => `\x1b[90m${s}\x1b[0m`
+  const cmd = (name, what) => `  ${accent(name.padEnd(9))} ${dim(what)}`
+  const motd = [
+    "",
+    accent(" █▀█ █ ▀█▀ █▀▀"),
+    accent(" █▀▄ █  █  ██▄"),
+    "",
+    "a shell for the browser. its own",
+    "language, real pipes, a filesystem",
+    "you define, and a few secrets.",
+    "",
+    cmd("install", "copy the npm install line"),
+    cmd("cdn", "print the script tags"),
+    cmd("cd code", "open the source"),
+    cmd("theme", "list or switch colors"),
+    "",
+    "type help. more than one way in.",
+    "",
+  ].join("\n")
+
+  const commands = [
+    {
+      name: "install",
+      summary: "copy the npm install line",
+      usage: "install",
+      run: async (p) => {
+        try {
+          await navigator.clipboard.writeText(INSTALL)
+          await p.out(`copied: ${INSTALL}\n`)
+        } catch {
+          await p.out(`${INSTALL}\n`)
+        }
+      },
+    },
+    {
+      name: "cdn",
+      summary: "print the script tags for a page",
+      usage: "cdn",
+      run: async (p) => {
+        await p.out(`<link rel="stylesheet" href="${CDN}rite.css">\n<script src="${CDN}rite.bundle.min.js"><\/script>\n`)
+      },
+    },
+    {
+      name: "theme",
+      summary: "show or switch the terminal theme",
+      usage: `theme [${NAMES.join("|")}]`,
+      run: async (p) => {
+        const name = p.args[0]
+        if (!name) {
+          for (const n of NAMES) await p.out(`${n === root.dataset.theme ? "* " : "  "}${n}\n`)
+          return 0
+        }
+        if (!NAMES.includes(name)) {
+          await p.err(`theme: no theme ${name}; try ${NAMES.join(", ")}\n`)
+          return 1
+        }
+        applyTheme(name)
+        return 0
+      },
+    },
+  ]
+
+  // The title bar's button steps through the themes in order.
+  const next = (name) => NAMES[(NAMES.indexOf(name) + 1) % NAMES.length]
+
+  let rite
+  function applyTheme(name) {
+    root.dataset.theme = name
+    rite?.setTheme(Rite.themes[name])
+    document.querySelector('meta[name="theme-color"]').content = Rite.themes[name].background
+    const other = next(name)
+    document.getElementById("theme-name").textContent = name
+    themeButton.setAttribute("aria-label", `theme: ${name}, switch to ${other}`)
+    try { localStorage.setItem("rite-theme", name) } catch {}
   }
+
+  const size = document.getElementById("size")
+  const showSize = ({ cols, rows }) => { size.textContent = `${cols}×${rows}` }
+
+  const clock = document.getElementById("clock")
+  const tick = () => {
+    const now = new Date()
+    clock.textContent = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })
+    clock.dateTime = now.toISOString()
+  }
+  tick()
+  setInterval(tick, 15000)
+
   const start = () => {
-  const rite = Rite.createRite({
-    element: document.getElementById("term"),
-    hostname: "rite.sh",
-    user: "guest",
-    motd: "type help. there is more than one way in.\n",
-    theme,
-    font: { family: "'Martian Mono', ui-monospace, monospace", size: 14 },
-    files: {
-      "/home/guest/about.txt": "rite is a shell for the browser, built on xterm.js.\nit started as a 2012 homepage experiment. it grew a language.\n",
-      "/home/guest/README": "try: ls /bin, man ls, echo hi | tee /tmp/x, cat /tmp/x\n",
-    },
-    inodes: {
-      "/home/guest/code": { type: "action", action: { open: "https://github.com/jarrodb/ritesh" } },
-    },
-  })
-  window.addEventListener("resize", () => rite.fit())
-  rite.focus()
+    rite = Rite.createRite({
+      element: document.getElementById("term"),
+      hostname: "rite.sh",
+      user: "guest",
+      motd,
+      theme: Rite.themes[initial],
+      font: { family: "'Martian Mono', ui-monospace, monospace", size: window.innerWidth < 640 ? 12 : 14 },
+      commands,
+      files: {
+        "/home/guest/about.txt": "rite is a shell for the browser, built on xterm.js.\nit started as a 2012 homepage experiment. it grew a language.\n",
+        "/home/guest/README": "try: ls /bin, man ls, echo hi | tee /tmp/x, cat /tmp/x\n",
+      },
+      inodes: {
+        "/home/guest/code": { type: "action", action: { open: "https://github.com/jarrodb/ritesh" } },
+      },
+    })
+    applyTheme(initial)
+    showSize(rite.size)
+    rite.onResize(showSize)
+    new ResizeObserver(() => rite.fit()).observe(document.getElementById("term"))
+    themeButton.addEventListener("click", () => {
+      applyTheme(next(root.dataset.theme))
+      rite.focus()
+    })
+    // The status line's commands run in the shell, where their output belongs.
+    for (const b of document.querySelectorAll("[data-run]")) {
+      b.addEventListener("click", () => { rite.exec(b.dataset.run); rite.focus() })
+    }
+    rite.focus()
   }
   // xterm measures its cells at creation: wait for the font.
   document.fonts.load("14px 'Martian Mono'").then(start, start)

@@ -29,7 +29,7 @@ The bundle includes xterm.js; the page needs no other script.
 |---|---|
 | `element` | where the terminal goes; give it a height |
 | `hostname`, `user` | the prompt's `user@host`; the user's home is `/home/<user>` |
-| `motd` | printed once at the start |
+| `motd` | printed once at the start; SGR colors are kept |
 | `files` | `{ path: content }`; content is a string or a function returning one |
 | `inodes` | `{ path: InodeSpec }`: directories, links, devices, commands, and actions |
 | `mounts` | `[{ path, provider }]`: a subtree served by your own `MountProvider` |
@@ -38,7 +38,7 @@ The bundle includes xterm.js; the page needs no other script.
 | `remote` | one rite.1 server, from `riteshjs/remote` |
 | `sudo` | `false` (default), `true`, or `(password) => boolean` |
 | `history` | `"local"` (default, per host and user), `"memory"`, or `false` |
-| `theme`, `font` | xterm colors and font; load web fonts before `createRite` |
+| `theme`, `font` | xterm colors (`themes.brass`, `tide`, `dusk`, `paper`, or your own) and font; load web fonts before `createRite` |
 | `onAction` | called for an action inode; `preventDefault()` stops rite's default |
 
 ## Actions
@@ -62,7 +62,19 @@ await rite.ready
 const { code } = await rite.exec("ls /bin")   // runs at the prompt, as if typed
 rite.print("notice")                           // above the prompt
 rite.focus(); rite.fit()                       // call fit() when the element resizes
+rite.size                                      // { cols, rows }
+const off = rite.onResize(({ cols, rows }) => {}) // after every fit or resize
+rite.setTheme(themes.paper)                    // switch colors at runtime
 rite.dispose()
+```
+
+## Themes
+
+`themes.brass`, `themes.tide`, and `themes.dusk` are dark; `themes.paper` is light. Every text color in each reads at 4.5:1 or more on its background. Both are plain xterm `ITheme` objects, so spread one to change a few colors:
+
+```ts
+import { createRite, themes } from "riteshjs"   // or Rite.themes from the bundle
+createRite({ element, theme: { ...themes.tide, cursor: "#e0ac4c" } })
 ```
 
 ## A server

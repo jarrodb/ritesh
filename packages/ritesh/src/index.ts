@@ -5,6 +5,7 @@ import { createBrowserTerm } from "./term/xterm.js"
 export * from "./contracts.js"
 export { defineCommand, defineEgg } from "./define.js"
 export { renderPrompt, VERSION } from "./rite.js"
+export * as themes from "./themes.js"
 
 /** Embed rite in a page. */
 export function createRite(options: HostOptions): Rite {
