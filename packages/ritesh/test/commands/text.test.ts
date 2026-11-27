@@ -92,8 +92,20 @@ describe("head", () => {
     [["--lines=1", "notes.txt"], "alpha\n"],
     [["--lines", "0", "notes.txt"], ""],
     [["-n", "99", "notes.txt"], "alpha\nbeta\ngamma\n"],
+    [["-2", "notes.txt"], "alpha\nbeta\n"],
+    [["-0", "notes.txt"], ""],
   ])("head %j", async (words, stdout) => {
     expect(await run(head, words)).toEqual({ code: 0, stdout, stderr: "" })
+  })
+
+  it("takes the older -N count on stdin", async () => {
+    const stdin = Array.from({ length: 12 }, (_, i) => `${i + 1}\n`).join("")
+    expect((await run(head, ["-3"], { stdin })).stdout).toBe("1\n2\n3\n")
+    expect((await run(tail, ["-2"], { stdin })).stdout).toBe("11\n12\n")
+  })
+
+  it("tail takes the older -N count on a file", async () => {
+    expect(await run(tail, ["-1", "notes.txt"])).toEqual({ code: 0, stdout: "gamma\n", stderr: "" })
   })
 
   it("heads each of several files", async () => {

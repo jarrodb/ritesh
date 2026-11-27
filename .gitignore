@@ -8,3 +8,6 @@ playwright-report/
 packages/ritesh/LICENSE
 test-results/
 playwright-report/
+
+# crash dumps
+core.[0-9]*

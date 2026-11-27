@@ -1,5 +1,5 @@
 import { defineCommand } from "../define.js"
-import { body, countFlag, each, emit, inputs, source, splitLines, usageError } from "./util.js"
+import { body, each, emit, lineCount, source, splitLines, usageError } from "./util.js"
 
 const USAGE = "head [-n lines] [file...]"
 
@@ -15,9 +15,8 @@ export const head = defineCommand({
     "is headed by `==> name <==`. Reading stdin stops once the lines are printed.",
   ].join("\n"),
   run: body("head", async (p) => {
-    const count = countFlag(p, "lines")
+    const { count, operands } = lineCount(p)
     if (count === undefined) return usageError(p, "head", USAGE, "invalid number of lines")
-    const operands = inputs(p)
     let first = true
     return each(p, "head", operands, async (operand) => {
       // Read before the header, so a missing file prints only its error.

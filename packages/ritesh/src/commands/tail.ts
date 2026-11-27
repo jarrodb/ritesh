@@ -1,5 +1,5 @@
 import { defineCommand } from "../define.js"
-import { body, countFlag, each, emit, inputs, source, splitLines, usageError } from "./util.js"
+import { body, each, emit, lineCount, source, splitLines, usageError } from "./util.js"
 
 const USAGE = "tail [-n lines] [file...]"
 
@@ -15,9 +15,8 @@ export const tail = defineCommand({
     "is headed by `==> name <==`. There is no -f: nothing is followed.",
   ].join("\n"),
   run: body("tail", async (p) => {
-    const count = countFlag(p, "lines")
+    const { count, operands } = lineCount(p)
     if (count === undefined) return usageError(p, "tail", USAGE, "invalid number of lines")
-    const operands = inputs(p)
     let first = true
     return each(p, "tail", operands, async (operand) => {
       let lines: string[]

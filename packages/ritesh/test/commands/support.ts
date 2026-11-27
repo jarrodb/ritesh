@@ -1,7 +1,8 @@
 // A Proc for one command over the real vfs, with the flag parsing the kernel
 // does from a definition. Command and egg tests share it.
+import { parseArgv } from "../../src/kernel/flags.js"
 import {
-  type CommandDef, type CommandInfo, type Env, EXIT, type FlagDef, type Flags, type Proc, type Resolution,
+  type CommandDef, type CommandInfo, type Env, EXIT, type Flags, type Proc, type Resolution,
   type SessionView, type SudoPolicy, type Sys, type Tty, type Vfs,
 } from "../../src/contracts.js"
 import { createVfs } from "../../src/vfs/index.js"
@@ -31,69 +32,6 @@ export function world(): Vfs {
 }
 
 // ---------------------------------------------------------------- flags
-
-type Parsed = { flags: Flags; args: string[] } | { usage: string } | { help: true }
-
-/** Combined shorts, `--long`, `--long=value`, `-n 5`, `-n5`, and `--`, per the definition. */
-export function parseArgs(defs: Record<string, FlagDef> | undefined, words: readonly string[]): Parsed {
-  if (!defs) return { flags: {}, args: [...words] }
-  const flags: Flags = {}
-  const byName = new Map<string, [string, FlagDef]>()
-  for (const [key, def] of Object.entries(defs)) {
-    if (def.default !== undefined) flags[key] = def.default
-    const long = def.long ?? (def.short === undefined && key.length > 1 ? key : undefined)
-    const short = def.short ?? (long === undefined ? key : undefined)
-    if (long !== undefined) byName.set(`--${long}`, [key, def])
-    if (short !== undefined) byName.set(`-${short}`, [key, def])
-  }
-  const args: string[] = []
-  const queue = [...words]
-  let failure: string | undefined
-  const take = (name: string, inline: string | undefined): void => {
-    const hit = byName.get(name)
-    if (!hit) {
-      failure ??= `unknown option: ${name}`
-      return
-    }
-    const [key, def] = hit
-    if (def.type === "boolean") {
-      flags[key] = true
-      return
-    }
-    const raw = inline ?? queue.shift()
-    if (raw === undefined) {
-      failure ??= `option ${name} needs a value`
-      return
-    }
-    const value = def.type === "number" ? Number(raw) : raw
-    if (typeof value === "number" && Number.isNaN(value)) {
-      failure ??= `option ${name} needs a number`
-      return
-    }
-    const held = flags[key]
-    flags[key] = def.repeat ? [...(Array.isArray(held) ? held : []), value] : value
-  }
-  for (let word = queue.shift(); word !== undefined; word = queue.shift()) {
-    if (word === "--") {
-      args.push(...queue.splice(0))
-    } else if (word === "--help") {
-      return { help: true }
-    } else if (word.startsWith("--")) {
-      const eq = word.indexOf("=")
-      take(eq < 0 ? word : word.slice(0, eq), eq < 0 ? undefined : word.slice(eq + 1))
-    } else if (word.startsWith("-") && word.length > 1) {
-      for (let i = 1; i < word.length; i++) {
-        const name = `-${word[i] ?? ""}`
-        const valued = byName.get(name)?.[1].type !== "boolean" && byName.has(name)
-        take(name, valued && i + 1 < word.length ? word.slice(i + 1) : undefined)
-        if (valued) break
-      }
-    } else {
-      args.push(word)
-    }
-  }
-  return failure === undefined ? { flags, args } : { usage: failure }
-}
 
 // ---------------------------------------------------------------- sys and tty
 
@@ -236,9 +174,10 @@ export async function exec(
  * `--help` and usage errors answered without calling `run`, void as exit 0.
  */
 export async function run(def: CommandDef, words: readonly string[] = [], o: RunOptions = {}): Promise<Result> {
-  const parsed = parseArgs(def.flags, words)
-  if ("help" in parsed) return { code: EXIT.OK, stdout: `usage: ${def.usage}\n`, stderr: "" }
-  if ("usage" in parsed) return { code: EXIT.USAGE, stdout: "", stderr: `${def.name}: ${parsed.usage}\nusage: ${def.usage}\n` }
+  // The kernel's own parser, so a command test reads its words as the shell does.
+  const parsed = parseArgv(def, [def.name, ...words])
+  if (parsed.kind === "help") return { code: EXIT.OK, stdout: `usage: ${def.usage}\n`, stderr: "" }
+  if (parsed.kind === "usage") return { code: EXIT.USAGE, stdout: "", stderr: `${def.name}: ${parsed.message}\nusage: ${def.usage}\n` }
   if (!def.run) throw new Error(`${def.name} has no run`)
   const { value, stdout, stderr } = await exec(def.run, [def.name, ...words], parsed, o)
   return { code: typeof value === "number" ? value : EXIT.OK, stdout, stderr }
