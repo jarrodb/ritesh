@@ -142,6 +142,16 @@ export function countFlag(p: Proc, name: string): number | undefined {
   return typeof value === "number" && Number.isInteger(value) && value >= 0 ? value : undefined
 }
 
+/**
+ * head and tail's line count and files: -n N, or the older first operand -N
+ * (`head -5`), which other shells still take.
+ */
+export function lineCount(p: Proc): { count: number | undefined; operands: readonly string[] } {
+  const short = /^-(\d+)$/.exec(p.args[0] ?? "")
+  if (short) return { count: Number(short[1]), operands: inputs(p, p.args.slice(1)) }
+  return { count: countFlag(p, "lines"), operands: inputs(p) }
+}
+
 // ---------------------------------------------------------------- text
 
 /** Order by code point, the order the language uses for glob results. */
