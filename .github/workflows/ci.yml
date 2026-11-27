@@ -26,6 +26,19 @@ jobs:
       - name: publint, attw, size-limit, pack and import
         run: npm run check:package
 
+  browsers:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - run: npm run e2e
+
   go:
     runs-on: ubuntu-24.04
     defaults:

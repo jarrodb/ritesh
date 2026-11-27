@@ -14,11 +14,14 @@
     "test": "npm test -w riteshjs",
     "check:package": "npm run check:package -w riteshjs",
     "changeset": "changeset",
-    "sync:protocol": "node scripts/sync-protocol.mjs"
+    "sync:protocol": "node scripts/sync-protocol.mjs",
+    "e2e": "playwright test"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.1",
     "@changesets/cli": "3.0.3",
     "@eslint/js": "10.0.1",
+    "@playwright/test": "1.65.1",
     "@types/node": "24.19.4",
     "eslint": "10.15.0",
     "globals": "17.14.0",
