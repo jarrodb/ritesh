@@ -1,8 +1,8 @@
-# rite.sh design
+# ritesh design
 
 ## Goal
 
-`rite` is a shell for the browser. rite.sh is the library that runs it on xterm.js. A host page embeds it, mounts its own directories and commands, and can connect it to one server over WSS. The first host is the mdm developer site (`qbranchio/mdmsdk`). It is an open-source library: publishing, the CDN, and the docs are part of the deliverable.
+`rite` is a shell for the browser. ritesh is the library that runs it on xterm.js. A host page embeds it, mounts its own directories and commands, and can connect it to one server over WSS. The first host is the mdm developer site (`qbranchio/mdmsdk`). It is an open-source library: publishing, the CDN, and the docs are part of the deliverable.
 
 This rewrites the 2012 ritesh.js in place. No 2012 code carries forward; its ideas do (commands are inodes, directories act, easter eggs).
 
@@ -11,7 +11,7 @@ This rewrites the 2012 ritesh.js in place. No 2012 code carries forward; its ide
 - xterm.js 6.0.0 and its addons (`fit`, `unicode11`, `web-links`) are the only third-party code, bundled into the output at exact versions. Everything else is rite's.
 - rite is not bash, zsh, or POSIX. `docs/language.md` defines the language; the parser follows it.
 - The remote protocol is JSON-RPC 2.0. The server decides what runs. The client sends argv, input lines, and signals; it never receives code or raw terminal control.
-- Repo `jarrodb/ritesh` (public). Go module `github.com/jarrodb/ritesh/server`. npm name: see Decisions.
+- Repo `jarrodb/ritesh` (public). Go module `github.com/jarrodb/ritesh/server`. npm `ritesh` (see Decisions).
 - MIT, `Copyright (c) 2026 Jarrod Baumann`. The LICENSE covers the new code; the 2012 code keeps its own header under the `legacy` tag.
 - Browser baseline: the current and previous major release of Chromium, Firefox, and Safari. Playwright runs all three engines. Mobile renders and accepts input; it gets no mobile-specific editing in v1.
 
@@ -20,14 +20,14 @@ This rewrites the 2012 ritesh.js in place. No 2012 code carries forward; its ide
 ```mermaid
 flowchart TB
   Host[host page] -->|createRite| Core
-  subgraph Core[rite.sh]
+  subgraph Core[ritesh]
     Term[term] --> Editor[editor]
     Editor -->|parse, complete| Kernel
     Kernel --> Parser[parser]
     Kernel --> VFS[vfs]
     Kernel --> Cmds[commands + eggs]
   end
-  Remote[rite.sh/remote] -->|MountProvider, CommandSource| Kernel
+  Remote[ritesh/remote] -->|MountProvider, CommandSource| Kernel
   Remote <-->|WSS rite.1| Server[ritesh/server Go]
 ```
 
@@ -45,7 +45,7 @@ Arrows are call direction. Import rules:
 | `remote` | rite.1 client; exposes a `MountProvider` and a `CommandSource` | contracts |
 | `index` | `createRite`, wiring | all above except `remote` |
 
-`remote` is a separate entry (`rite.sh/remote`); core never imports it. Only `term` imports xterm.
+`remote` is a separate entry (`ritesh/remote`); core never imports it. Only `term` imports xterm.
 
 ## Contracts
 
@@ -189,14 +189,14 @@ defineEgg({ id: "sudoers", trigger: { command: "sudo" }, run: async (p) => PASS 
 - Triggers: `command` (name, or name plus argv predicate), `input` (regex on the raw line, checked before parsing), `keys` (sequence, attached by the editor through the kernel's egg registry).
 - Order: `input` eggs, then alias and expansion, then `command` eggs, then lookup. The first egg that does not return `PASS` handles the line. In a pipeline, `command` eggs apply to each stage.
 - `createRite({ eggs })` registers; `eggs: false` disables all.
-- Shipped in `rite.sh/eggs`:
+- Shipped in `ritesh/eggs`:
   - `sudoers`: `<user> is not in the sudoers file. This incident will be reported.`
   - `rmrf`: matches `rm` with recursive and force flags (any spelling) and a target that normalizes to `/`. Prints a fake deletion cascade, then `just kidding. nothing here is yours to delete.`
 - Product eggs live in the host (mdm: `memdsk`).
 
 ## Remote protocol (rite.1)
 
-Defined in `docs/protocol.md` and `protocol/rite.1.schema.json` (JSON Schema 2020-12). rite.1 is a draft until rite.sh 1.0; after that, an incompatible change is `rite.2`.
+Defined in `docs/protocol.md` and `protocol/rite.1.schema.json` (JSON Schema 2020-12). rite.1 is a draft until ritesh 1.0; after that, an incompatible change is `rite.2`.
 
 Transport:
 
@@ -269,9 +269,9 @@ One writer goroutine per connection. Sessions live in process memory: run one re
 ## Host API
 
 ```ts
-import { createRite } from "rite.sh"
-import { sudoers, rmrf } from "rite.sh/eggs"
-import { remote } from "rite.sh/remote"
+import { createRite } from "ritesh"
+import { sudoers, rmrf } from "ritesh/eggs"
+import { remote } from "ritesh/remote"
 // <link rel="stylesheet" href=".../rite.css"> (contains xterm's CSS)
 
 const rite = createRite({
@@ -317,7 +317,7 @@ The npm package name is claimed in phase 0 (a `0.0.0` placeholder published by h
 ## Repo layout
 
 ```
-packages/rite.sh/     src/{contracts.ts,term,editor,parser,kernel,vfs,commands,eggs,remote,index.ts}
+packages/ritesh/     src/{contracts.ts,term,editor,parser,kernel,vfs,commands,eggs,remote,index.ts}
 server/               Go module (go.mod, LICENSE copy, embedded schema)
 protocol/             rite.1.schema.json, traces/*.jsonl, world.json (the test server's mounts and commands)
 docs/                 language.md, protocol.md, embedding.md, commands.md, specs/
@@ -338,7 +338,7 @@ pnpm workspace at the root. The 2012 code is tagged `legacy` and removed from th
 - Editor: key sequences in, rendered line and cursor out, against the `term` interface backed by `@xterm/headless` (imported from `lib-headless/xterm-headless.mjs`; the package's `module` field points at a missing file).
 - Commands: every `--help`, usage error, and exit code.
 - Protocol: traces (`direction, message, match`) replayed against the TS client and against the Go server; plus a CI job that runs the Go test server and drives the TS client against it, covering ordering, reconnect, limits, malicious frames, and session isolation.
-- Package: pack the tarball, install it in a temp project, `node -e "await import('rite.sh')"`, import every export, check the IIFE global in a page. publint and attw (ESM-only profile). size-limit.
+- Package: pack the tarball, install it in a temp project, `node -e "await import('ritesh')"`, import every export, check the IIFE global in a page. publint and attw (ESM-only profile). size-limit.
 - Browser: Playwright on Chromium, Firefox, WebKit with the ESM build and the IIFE bundle: typing, completion, ^C, resize, axe.
 
 ## Decisions
@@ -390,10 +390,11 @@ Release flow and gates as specified above.
 <<<<<<< review
 npm package `rite.sh`.
 ||| fable question: npm blocks new names that differ from an existing one only by punctuation.
-||| claude edit: confirmed. `ritesh` exists (unrelated, 2022), so `rite.sh` and `rite-sh` are refused at publish. `riteshell` is free; `rite` is taken.
+||| claude edit: confirmed. `ritesh` exists on npm (another owner, created 2017, last published 2022, no README, about 23 downloads a month), so `rite.sh` and `rite-sh` are refused.
+||| owner edit: the name is `ritesh`, everywhere.
 =======
-Open for the owner: `riteshell` (unscoped) or a scoped name such as `@jarrodb/rite`. The project, shell, and site keep the rite.sh name either way.
->>>>>>> claude+codex
+npm name `ritesh`. Phase 0 asks the current owner for a transfer and, if there is no answer, files an npm support request under the name-squatting policy. Until `ritesh` is ours, prereleases publish as `@jarrodb/ritesh`; imports, CDN URLs, and docs switch to `ritesh` when the transfer lands.
+>>>>>>> claude
 
 - Cut from v1: `su`, interactive subshell, the `path` egg trigger, gid checks, `rite.min.js`.
 
