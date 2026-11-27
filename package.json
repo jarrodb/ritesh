@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "npm run build -w riteshjs",
-    "lint": "eslint . && npm run typecheck -w riteshjs",
+    "lint": "eslint . && tsc --noEmit -p tsconfig.json && npm run typecheck -w riteshjs",
     "test": "npm test -w riteshjs",
     "check:package": "npm run check:package -w riteshjs",
     "changeset": "changeset",
