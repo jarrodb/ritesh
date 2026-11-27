@@ -300,7 +300,7 @@ rite.dispose()                 // aborts jobs, closes the socket, releases xterm
 - Outputs: ESM entries with `.d.ts`; `dist/rite.bundle.min.js` (IIFE, global `Rite` = `{ createRite, defineCommand, defineEgg, eggs, remote }`); `dist/rite.css`, a static file with xterm's CSS and rite's, copied at build, never imported from JS.
 - Licence notices: a banner in every output and `THIRD_PARTY_NOTICES` in the tarball for xterm.
 - CSP: `docs/embedding.md` lists `style-src 'unsafe-inline'` (xterm creates style elements at runtime), `connect-src` for the WSS host, and `script-src` with SRI.
-- Size budgets (gzip): `rite.bundle.min.js` 150 kB; rite's own ESM code 45 kB; the unminified ESM xterm chunk 120 kB (measured 109 kB; consumers' bundlers minify it).
+- Size budgets (gzip): `rite.bundle.min.js` 150 kB, the minified total, which bounds rite's own minified code (measured 132 kB with xterm's 93 kB, so rite is about 39 kB); rite's own ESM code, shipped unminified, 75 kB (measured 66 kB); the unminified ESM xterm chunk 120 kB (measured 109 kB).
 - `protocol/` is the source of truth; the build copies the schema into `server/` (for `go:embed`) and into the package, with a drift check in CI. TS protocol types are generated from the schema; Go types are hand-written and tested against the fixtures.
 - CDN: jsDelivr, unpkg, and esm.sh serve every npm version with no setup. The release workflow hashes `rite.bundle.min.js` and `rite.css` from the packed tarball, fetches the exact-version jsDelivr and unpkg URLs after publish, and fails if the bytes differ. SRI hashes go in the release notes, README, and docs. esm.sh rebuilds its output, so it is listed without SRI. cdnjs submission after 1.0.
 

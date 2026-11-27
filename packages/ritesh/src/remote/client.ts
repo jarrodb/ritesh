@@ -82,6 +82,13 @@ export function createRemote(options: RemoteOptions): RemoteClient {
     commands: procs,
     link,
     connect: () => link.ensure(),
+    resize: (cols, rows) => {
+      if (!Number.isInteger(cols) || !Number.isInteger(rows) || cols <= 0 || rows <= 0) return
+      if (cols === link.tty.cols && rows === link.tty.rows) return
+      // Kept for the next rite.hello when not connected; sent now when connected.
+      link.tty = { cols, rows }
+      link.notify("tty.resize", { cols, rows })
+    },
     dispose: () => {
       procs.dispose()
       link.dispose()

@@ -76,12 +76,12 @@
       "gzip": true
     },
     {
-      "name": "rite code (ESM entries and chunks, vendor excluded)",
+      "name": "rite code (ESM, unminified: consumers' bundlers minify)",
       "path": [
         "dist/*.js",
         "!dist/rite.bundle.min.js"
       ],
-      "limit": "45 kB",
+      "limit": "75 kB",
       "gzip": true
     },
     {

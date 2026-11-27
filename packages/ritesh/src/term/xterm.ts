@@ -7,6 +7,7 @@ import { createTerm } from "./term.js"
 
 export interface BrowserTermOptions {
   theme?: Record<string, string>
+  font?: { family?: string; size?: number }
   screenReaderMode?: boolean
 }
 
@@ -30,11 +31,26 @@ export function createBrowserTerm(element: HTMLElement, options: BrowserTermOpti
     convertEol: false,
     cursorBlink: true,
     theme: options.theme ?? {},
+    ...(options.font?.family ? { fontFamily: options.font.family } : {}),
+    ...(options.font?.size ? { fontSize: options.font.size } : {}),
     linkHandler: { activate: (_event, uri) => { safeOpen(uri) } },
   })
   const fit = new FitAddon()
   xterm.loadAddon(fit)
   xterm.loadAddon(new WebLinksAddon((_event, uri) => { safeOpen(uri) }))
+  // Esc then Tab moves focus out of the terminal, so keyboard users are
+  // never trapped. Any other key after Esc goes to the shell as usual.
+  let escaped = false
+  xterm.attachCustomKeyEventHandler((e) => {
+    if (e.type !== "keydown") return true
+    if (escaped && e.key === "Tab" && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      // Not handled by xterm: the browser's own Tab moves focus onward.
+      escaped = false
+      return false
+    }
+    escaped = e.key === "Escape"
+    return true
+  })
   xterm.open(element)
   fit.fit()
   return createTerm(xterm, new Unicode11Addon(), { fit: () => { fit.fit() } })

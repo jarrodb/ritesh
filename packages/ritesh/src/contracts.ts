@@ -419,6 +419,8 @@ export interface CommandInfo {
   name: string
   summary: string
   usage: string
+  /** Longer text for man, when the definition has one. */
+  manual?: string
   flags?: Record<string, FlagDef>
   subcommands?: Record<string, { summary: string; usage: string }>
   builtin: boolean
@@ -498,6 +500,8 @@ export interface Kernel {
   readonly session: SessionView
   /** Run one line as if typed. Queued behind any running job. */
   exec(line: string, stdio?: Partial<StdioStreams>): Promise<number>
+  /** Run one egg directly (a key trigger), queued like a line. */
+  runEgg(egg: EggDef): Promise<number>
   complete(line: string, cursor: number, o: { signal: AbortSignal }): Promise<Completion>
   /** Abort the foreground job (^C). */
   interrupt(): void
@@ -529,6 +533,8 @@ export interface HostOptions {
   sudo?: SudoPolicy
   history?: HistoryMode
   theme?: Record<string, string>
+  /** The terminal's font. Load web fonts before createRite so the cell size is measured right. */
+  font?: { family?: string; size?: number }
   screenReaderMode?: boolean
   onAction?: (e: ActionEvent) => void
 }
@@ -540,6 +546,8 @@ export interface RemoteHandle {
   readonly provider: MountProvider
   readonly commands: CommandSource
   connect(): Promise<void>
+  /** The terminal's size changed: tell the server (tty.resize) if connected. */
+  resize(cols: number, rows: number): void
   dispose(): void
   onNotify(listener: (text: string, level: "info" | "warn" | "error") => void): () => void
 }

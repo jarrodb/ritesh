@@ -6,6 +6,8 @@ export type Key =
   | { type: "text"; text: string }
   | { type: "paste"; text: string }
   | { type: "key"; name: string }
+  /** A whole line from the host (Rite.exec), submitted as if typed at a command prompt. */
+  | { type: "run"; text: string }
 
 const ESC = "\x1b"
 const PASTE_START = "\x1b[200~"
@@ -140,6 +142,6 @@ export function triggerKeys(trigger: string): string[] {
 /** The names a key is matched by in egg triggers. A paste is not a key. */
 export function keyNames(key: Key): string[] {
   if (key.type === "key") return [key.name]
-  if (key.type === "paste") return []
+  if (key.type === "paste" || key.type === "run") return []
   return Array.from(key.text, (ch) => (ch === " " ? "space" : ch))
 }

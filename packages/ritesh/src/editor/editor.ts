@@ -39,6 +39,8 @@ export interface Editor {
   readText(prompt?: string): Promise<string | null>
   /** Reads a line without echo. Never recorded. Null on ^D or ^C. */
   readSecret(prompt: string): Promise<string | null>
+  /** Submits a line at the next command prompt, as if typed. */
+  run(line: string): void
   /** ^C from the program: abandons the line being read. */
   interrupt(): void
   /** Prints text above the prompt and redraws the line. */
@@ -578,6 +580,11 @@ export function createEditor(options: EditorOptions): Editor {
     if (r.menu && menuKey(r, r.menu, key)) return
     if (key.type === "text") insert(r, key.text)
     else if (key.type === "paste") paste(r, key.text)
+    else if (key.type === "run") {
+      replace(r, key.text)
+      draw(r)
+      finish(r, key.text)
+    }
     else command(r, key.name, wasCompleting)
   }
 
@@ -585,6 +592,8 @@ export function createEditor(options: EditorOptions): Editor {
   function pump(): void {
     let handled = false
     for (let r = active; r && queue.length > 0; r = active) {
+      // A host line waits for a command prompt; a command reading stdin never gets it.
+      if (queue[0]?.type === "run" && r.mode !== "shell") break
       const key = queue.shift()
       if (key === undefined) break
       handle(r, key)
@@ -635,6 +644,11 @@ export function createEditor(options: EditorOptions): Editor {
     readLine: () => begin("shell", undefined),
     readText: (text = "") => begin("text", text),
     readSecret: (text) => begin("secret", text),
+    run(line) {
+      if (disposed) return
+      queue.push({ type: "run", text: line })
+      pump()
+    },
     interrupt() {
       queue.length = 0
       if (active && abandon(active, false)) draw(active)
