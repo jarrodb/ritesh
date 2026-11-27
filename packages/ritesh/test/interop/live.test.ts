@@ -9,7 +9,6 @@ import { createInterface } from "node:readline"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import type { RemoteHandle } from "../../src/contracts.js"
 import { remote } from "../../src/remote.js"
-import type { SocketLike } from "../../src/remote/wire.js"
 import { fakeProc } from "../remote/support.js"
 
 const serverDir = join(import.meta.dirname, "../../../../server")
@@ -45,7 +44,7 @@ describe.skipIf(!hasGo)("rite.1 client against the Go server", () => {
     handle = remote({
       url, at: "/w", token: () => "test-token", connect: "eager", env: ["A"],
       // Node's WebSocket sends no Origin; the server requires one.
-      socket: (u, protocols) => new WebSocket(u, { protocols, headers: { Origin: "http://localhost" } } as unknown as string[]) as unknown as SocketLike,
+      socket: (u, protocols) => new WebSocket(u, { protocols, headers: { Origin: "http://localhost" } } as unknown as string[]),
     })
     await handle.connect()
   }, 120_000)
