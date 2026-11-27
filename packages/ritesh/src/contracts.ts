@@ -469,8 +469,18 @@ export interface TermSize {
 
 /** The only boundary to xterm. The editor renders through it; tests back it with @xterm/headless. */
 export interface Term {
-  /** Write with a policy; resolves once xterm has parsed the data. "\n" becomes "\r\n". */
+  /**
+   * Write complete text with a policy; resolves once xterm has parsed it.
+   * "\n" becomes "\r\n". Each call is filtered on its own: an escape
+   * sequence cut off at the end of the data is dropped.
+   */
   write(data: string, policy: OutputPolicy): Promise<void>
+  /**
+   * A writer for one stream (a process's stdout): its filter keeps an escape
+   * sequence split across chunks until it completes, apart from every other
+   * writer.
+   */
+  writer(policy: OutputPolicy): (chunk: string) => Promise<void>
   /** Key input, already decoded into strings, terminal replies discarded. Returns an unsubscribe. */
   onInput(listener: (data: string) => void): () => void
   onResize(listener: (size: TermSize) => void): () => void

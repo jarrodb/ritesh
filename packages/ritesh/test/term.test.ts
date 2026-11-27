@@ -51,6 +51,27 @@ describe("createOutputFilter", () => {
   })
 })
 
+describe("term writers", () => {
+  it("keeps each writer's pending sequence apart", async () => {
+    const h = headlessTerm(20, 4)
+    const a = h.term.writer("sgr")
+    const b = h.term.writer("plain")
+    await a("x\x1b[3")
+    await b("yz")
+    await a("1mred")
+    expect(h.screen()[0]).toBe("xyzred")
+    h.term.dispose()
+  })
+
+  it("write is self-contained: a cut sequence cannot swallow later text", async () => {
+    const h = headlessTerm(20, 4)
+    await h.term.write("cut \x1b", "plain")
+    await h.term.write("next", "plain")
+    expect(h.screen()[0]).toBe("cut next")
+    h.term.dispose()
+  })
+})
+
 describe("term over headless xterm", () => {
   it("writes filtered output and resolves after parsing", async () => {
     const h = headlessTerm(20, 4)

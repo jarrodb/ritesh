@@ -1,5 +1,5 @@
 import type { OutputPolicy, Term, TermSize } from "../contracts.js"
-import { createOutputFilter, isTerminalReply, type OutputFilter } from "./filter.js"
+import { createOutputFilter, filterOutput, isTerminalReply } from "./filter.js"
 
 interface Disposable {
   dispose(): void
@@ -39,16 +39,14 @@ export function createTerm(xterm: XtermLike, unicode: UnicodeAddonLike, hooks: {
     xterm.unicode.activeVersion = "11"
   }
   const disposables: Disposable[] = []
-  // One filter per policy, so a sequence split across writes is kept whole.
-  const filters: Record<OutputPolicy, OutputFilter> = {
-    plain: createOutputFilter("plain"),
-    sgr: createOutputFilter("sgr"),
-    raw: createOutputFilter("raw"),
-  }
+  const send = (text: string): Promise<void> => new Promise((resolve) => { xterm.write(text, resolve) })
   return {
     write(data: string, policy: OutputPolicy): Promise<void> {
-      const text = filters[policy](data)
-      return new Promise((resolve) => { xterm.write(text, resolve) })
+      return send(filterOutput(data, policy))
+    },
+    writer(policy: OutputPolicy): (chunk: string) => Promise<void> {
+      const filter = createOutputFilter(policy)
+      return (chunk) => send(filter(chunk))
     },
     onInput(listener: (data: string) => void): () => void {
       const d = xterm.onData((data) => {
