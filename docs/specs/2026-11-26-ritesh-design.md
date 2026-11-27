@@ -11,7 +11,7 @@ This rewrites the 2012 ritesh.js in place. Nothing from the old code carries for
 - One runtime dependency: `@xterm/xterm` 6 (peer), plus xterm's own addons (`fit`, `unicode11`, `web-links`). Everything else is rite's.
 - rite is not bash, zsh, or POSIX. Its language is defined by `docs/language.md`, and the parser follows that document.
 - The remote protocol is JSON-RPC 2.0. The server decides what runs; the client sends argv and keystrokes, never receives code.
-- MIT, `Copyright (c) 2026 Q Branch`.
+- MIT, `Copyright (c) 2026 Jarrod Baumann`.
 - Repo: `jarrodb/ritesh`. npm: `rite.sh`. Go: `github.com/jarrodb/ritesh/server`.
 
 ## Architecture
@@ -207,7 +207,7 @@ The 2012 code is tagged `legacy` before the rewrite and removed from the tree.
 
 ## Open source
 
-`README.md` (what, install, CDN snippet, 20-line embed example, link to demo), `LICENSE` (MIT, Q Branch 2026), `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), `SECURITY.md` (GitHub private vulnerability reporting), `CHANGELOG.md` (Changesets), `AGENTS.md`, issue and PR templates.
+`README.md` (what, install, CDN snippet, 20-line embed example, link to demo), `LICENSE` (MIT, Jarrod Baumann 2026), `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), `SECURITY.md` (GitHub private vulnerability reporting), `CHANGELOG.md` (Changesets), `AGENTS.md`, issue and PR templates.
 
 ## Testing
 
@@ -224,7 +224,7 @@ The 2012 code is tagged `legacy` before the rewrite and removed from the tree.
 - Own JSON-RPC client; the standard is the protocol, not a package.
 - No PTY passthrough. Remote mounts and server push only.
 - Rewrite in `jarrodb/ritesh`; 2012 code kept under the `legacy` tag.
-- MIT, Copyright (c) 2026 Q Branch.
+- MIT, Copyright (c) 2026 Jarrod Baumann.
 - One npm package with subpath exports, not a package per module.
 - History in `localStorage` is a convenience; nothing depends on it.
 
