@@ -43,9 +43,9 @@ Result: `session`, `resumed`, `commands` (descriptors: `name`, `summary`, `usage
 | Method | Params | Result |
 |---|---|---|
 | `rite.hello` | above | above |
-| `fs.stat` | `path` | `type` (`dir` or `file`), `size`, `mode`, `mtime` |
+| `fs.stat` | `path` | `type` (`dir` or `file`), `size` (bytes), `mode`, `mtime` (milliseconds since the epoch) |
 | `fs.list` | `path` | `entries` (`name`, `type`), `truncated` |
-| `fs.read` | `path`, optional `offset`, `length` | `data`, `eof` |
+| `fs.read` | `path`, optional `offset`, `length` (UTF-8 bytes) | `data`, `eof` |
 | `proc.start` | `pid`, `argv`, `cwd`, `env`, `stdio` (`stdin`, `stdout`, `stderr`: `tty` or `pipe`) | `{}` |
 | `proc.complete` | `argv`, `index` | `candidates` (`value`, optional `display`, `description`, `suffix`) |
 
@@ -98,7 +98,7 @@ The server enforces, and reports the first four in `rite.hello`:
 - `maxMessageBytes`: the largest message either side may send. The client splits stdin under it.
 - `maxProcs`: processes running at once per session.
 - `maxOutputBytes`: output per process; past it the process is killed and `proc.stderr` says why.
-- `idleSeconds`: the server closes an idle connection after it; the client reconnects on next use.
+- `idleSeconds`: a connection is idle when no message has passed in either direction and no process is running. The server closes it after that long with close code 1000 and reason `idle`; the client reconnects on next use. Pings do not count as traffic.
 - Not reported: messages per second, sessions per principal, wall time per process, stdin buffer per process, argv, env, and path lengths, `fs.read` and `fs.list` sizes, unauthenticated connections per address (5 s to send `rite.hello`, at most 8 KiB).
 
 ## Origin and paths

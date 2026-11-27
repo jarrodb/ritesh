@@ -24,7 +24,7 @@ command   = { assignment } word-or-redirect { word-or-redirect }
 - Unquoted text is split into words on spaces and tabs.
 - `'...'`: everything literal. No escapes.
 - `"..."`: `$NAME` and `${NAME}` expand; `\"`, `\\`, and `\$` are the only escapes; any other `\` is literal.
-- Unquoted `\` makes the next character literal. `\` at the end of the line makes the line incomplete.
+- Unquoted `\` makes the next character literal. `\` at the end of the line makes the line incomplete; when the editor continues it, the `\` and the newline are removed (a line continuation), inside double quotes too.
 - Adjacent parts form one word: `a'b'"c"` is the word `abc`.
 - `#` starts a comment only at the start of a word: `echo a#b` prints `a#b`, `echo a #b` prints `a`.
 - An open quote makes the line incomplete. The editor continues it on the next line, joined with `\n`.
@@ -86,7 +86,7 @@ There is no field splitting: an expansion never produces more than one word, and
 
 ## Reserved syntax
 
-Unquoted, each of these is a syntax error, exit 2: `rite: '<token>' is not supported in rite <version>`. None of them is ever a literal.
+Unquoted, each of these is a syntax error, exit 2: `rite: '<token>' is not supported in rite <version>`. None of them is ever a literal. The `$` and backquote forms (`` ` ``, `$(`, `$((`, `$0` to `$9`, `$@`, `$*`, `$#`, `$$`, `$!`, `${` with anything but a name) are errors inside double quotes too (`$'` and `$"` are reserved unquoted only: inside double quotes a `$` before a quote is a literal `$`), so adding them later cannot change what an existing quoted line means.
 
 - `` ` `` `$(` `$((` `$'` `$"` `(` `)` `{` `}` `<<` `<<<` `<(` `>(` `|&` `&>` `>|` `;;` `&` `[[` `((`
 - `$0` to `$9`, `$@`, `$*`, `$#`, `$$`, `$!`

@@ -135,9 +135,9 @@ Phase 0 ships an in-memory fake for every contract and a harness that runs `echo
 Inode types: `dir`, `file` (string, or function returning string or Promise), `cmd`, `link`, `action`, `dev` (read and write handlers; `/dev/null`). Mounts are mount-table entries, not inodes.
 
 - Paths: the vfs takes absolute or cwd-relative paths; `~` is kernel expansion. `..` is lexical. Links resolve to depth 16, then `ELOOP`; a dangling link stats as `ENOENT`.
-- Permissions are presentation, not security. Users: the host's user (uid 1000) and root (uid 0). Owner bits only; gid is display-only. Root bypasses checks. Directories need `x` to enter. New files `0644`, dirs `0755`.
+- Permissions are presentation, not security. Users: the host's user (uid 1000) and root (uid 0). The owner gets the owner bits and every other uid the other bits; group bits are unused and gid is display-only. The vfs takes no uid on reads and writes: the kernel calls `access` first. Root bypasses checks. Directories need `x` to enter. New files `0644`, dirs `0755`.
 - Memory only, per page load. `.riterc` edits do not persist. Caps: 1 MiB per file, 8 MiB total, then `ENOSPC`.
-- Actions: `stat` and `list` never trigger them. Only `cd`, `open`, and `cat` call `vfs.activate`. Definition is one of `{ navigate: href }`, `{ open: url }`, `{ event: name, detail }`, `{ print: text }`. The host receives `{ kind, href?, url?, name?, detail?, path, via }` through `onAction` and can `preventDefault()`. URLs are `http:` or `https:` only. If `window.open` returns null, `open` prints the URL.
+- Actions: `stat` and `list` never trigger them. Only `cd`, `open`, and `cat` call `vfs.activate`. Definition is one of `{ navigate: href }`, `{ open: url }`, `{ event: name, detail }`, `{ print: text }`. The host receives `{ kind, href?, url?, name?, detail?, path, via }` through `onAction` and can `preventDefault()`. The kernel, not the vfs, opens an `open` action's URL, and only after `onAction` returned without preventing it. URLs are `http:` or `https:` only. If `window.open` returns null, `open` prints the URL.
 - Default tree: `/bin`, `/usr/share/man`, `/etc/motd`, `/etc/hostname`, `/home/<user>/.riterc`, `/root`, `/tmp`, `/dev/null`.
 
 ## Commands

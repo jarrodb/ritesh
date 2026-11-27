@@ -1,16 +1,15 @@
-// The rite.1 client. Implemented in wave A against protocol/ traces.
+// The rite.1 client (riteshjs/remote). Core never imports this module.
 import type { RemoteHandle } from "./contracts.js"
+import { createRemote } from "./remote/client.js"
+import type { RemoteOptions } from "./remote/options.js"
 
-export interface RemoteOptions {
-  url: string
-  at: string
-  bin?: string
-  env?: string[]
-  token: () => string | Promise<string>
-  connect?: "lazy" | "eager"
-  commands?: string[]
-}
+export type { RemoteOptions } from "./remote/options.js"
+export type { Clock, SocketFactory, SocketLike } from "./remote/wire.js"
 
+/**
+ * A remote server as a mount and a command source for createRite. Nothing is
+ * sent until the first use unless `connect` is "eager".
+ */
 export function remote(options: RemoteOptions): RemoteHandle {
-  throw new Error(`ritesh: the rite.1 client is not implemented yet (${options.url})`)
+  return createRemote(options)
 }

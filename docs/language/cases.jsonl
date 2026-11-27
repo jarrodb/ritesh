@@ -85,3 +85,12 @@
 {"line": "alias ll='ls -l'; alias ll", "parse": "ok", "stdout": "ll='ls -l'\n", "exit": 0}
 {"line": "alias e='echo a; echo'; e b", "parse": "ok", "stdout": "a\nb\n", "exit": 0}
 {"line": "alias echo='echo x'; echo y", "parse": "ok", "stdout": "x y\n", "exit": 0}
+{"line": "echo \"$(x)\"", "parse": "syntax", "error": "'$(' is not supported", "exit": 2}
+{"line": "echo \"a`b`\"", "parse": "syntax", "error": "'`' is not supported", "exit": 2}
+{"line": "echo \"$1\"", "parse": "syntax", "error": "'$1' is not supported", "exit": 2}
+{"line": "echo \"${X:-y}\"", "parse": "syntax", "error": "is not supported", "exit": 2}
+{"line": "echo '$(x)'", "parse": "ok", "words": [["echo", "$(x)"]], "stdout": "$(x)\n", "exit": 0}
+{"line": "echo a\\\nb", "parse": "ok", "words": [["echo", "ab"]], "stdout": "ab\n", "exit": 0}
+{"line": "echo \"a\\\nb\"", "parse": "ok", "words": [["echo", "ab"]], "stdout": "ab\n", "exit": 0}
+{"line": "echo \"cost: 5$\"", "parse": "ok", "words": [["echo", "cost: 5$"]], "stdout": "cost: 5$\n", "exit": 0}
+{"line": "echo \"a$'b\"", "parse": "ok", "words": [["echo", "a$'b"]], "stdout": "a$'b\n", "exit": 0}
