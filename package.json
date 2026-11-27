@@ -15,7 +15,8 @@
     "check:package": "npm run check:package -w riteshjs",
     "changeset": "changeset",
     "sync:protocol": "node scripts/sync-protocol.mjs",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "demo:record": "node scripts/record-demo.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.1",
@@ -27,6 +28,7 @@
     "globals": "17.14.0",
     "json-schema-to-typescript": "16.0.0",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.74.0"
+    "typescript-eslint": "8.74.0",
+    "vite": "8.4.0"
   }
 }

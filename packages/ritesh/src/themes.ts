@@ -28,10 +28,10 @@ export const dusk = {
   brightBlack: "#8f86a0", brightRed: "#f094a0", brightGreen: "#b4d8b2", brightYellow: "#ead39c", brightBlue: "#a9bdf0", brightMagenta: "#cbbaee", brightCyan: "#9ad5d9", brightWhite: "#f4f0fa",
 } satisfies Theme
 
-/** Light: warm paper, ink-dark text, vermilion cursor. */
+/** Light: warm paper, ink-dark text, a dark brass cursor (brass's light sibling). */
 export const paper = {
-  background: "#f5eee3", foreground: "#33241d", cursor: "#c7432a", cursorAccent: "#f5eee3",
-  selectionBackground: "#ecc9b8",
+  background: "#f5eee3", foreground: "#33241d", cursor: "#8a5a00", cursorAccent: "#f5eee3",
+  selectionBackground: "#e8d6b0",
   black: "#33241d", red: "#b3301c", green: "#2f6b3a", yellow: "#8a5a00", blue: "#2e4f8a", magenta: "#8a3a6e", cyan: "#1f6670", white: "#6b5c53",
   brightBlack: "#5a4a40", brightRed: "#b5371f", brightGreen: "#2c7339", brightYellow: "#875e00", brightBlue: "#3c63a8", brightMagenta: "#a3488a", brightCyan: "#22747f", brightWhite: "#6b5c53",
 } satisfies Theme
