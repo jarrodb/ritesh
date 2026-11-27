@@ -1,0 +1,94 @@
+{
+  "name": "ritesh",
+  "version": "0.0.0",
+  "description": "rite: a shell for the browser, on xterm.js",
+  "license": "MIT",
+  "author": "Jarrod Baumann",
+  "homepage": "https://github.com/jarrodb/ritesh",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jarrodb/ritesh.git",
+    "directory": "packages/ritesh"
+  },
+  "bugs": "https://github.com/jarrodb/ritesh/issues",
+  "keywords": [
+    "shell",
+    "terminal",
+    "xterm",
+    "browser"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "files": [
+    "dist",
+    "THIRD_PARTY_NOTICES",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./eggs": {
+      "types": "./dist/eggs.d.ts",
+      "default": "./dist/eggs.js"
+    },
+    "./remote": {
+      "types": "./dist/remote.d.ts",
+      "default": "./dist/remote.js"
+    },
+    "./rite.css": "./dist/rite.css",
+    "./package.json": "./package.json"
+  },
+  "unpkg": "./dist/rite.bundle.min.js",
+  "jsdelivr": "./dist/rite.bundle.min.js",
+  "engines": {
+    "node": ">=24.11.0"
+  },
+  "scripts": {
+    "build": "tsdown && node scripts/copy-css.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "check:package": "publint --strict && attw --pack . --profile esm-only --exclude-entrypoints ./rite.css && size-limit && node scripts/pack-smoke.mjs",
+    "prepack": "node -e \"require('fs').copyFileSync('../../LICENSE','LICENSE')\""
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "0.18.5",
+    "@size-limit/file": "14.3.0",
+    "@xterm/addon-fit": "0.11.0",
+    "@xterm/addon-unicode11": "0.9.0",
+    "@xterm/addon-web-links": "0.12.0",
+    "@xterm/headless": "6.0.0",
+    "@xterm/xterm": "6.0.0",
+    "ajv": "8.20.0",
+    "publint": "0.3.25",
+    "size-limit": "14.3.0",
+    "tsdown": "0.23.7",
+    "vitest": "5.1.2"
+  },
+  "size-limit": [
+    {
+      "name": "IIFE bundle (with xterm)",
+      "path": "dist/rite.bundle.min.js",
+      "limit": "150 kB",
+      "gzip": true
+    },
+    {
+      "name": "rite code (ESM entries and chunks, vendor excluded)",
+      "path": [
+        "dist/*.js",
+        "!dist/rite.bundle.min.js"
+      ],
+      "limit": "45 kB",
+      "gzip": true
+    },
+    {
+      "name": "xterm vendor chunk",
+      "path": "dist/vendor/*.js",
+      "limit": "120 kB",
+      "gzip": true
+    }
+  ]
+}

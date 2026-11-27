@@ -1,0 +1,55 @@
+{
+  "description": "The filesystem and commands the conformance server registers.",
+  "token": "test-token",
+  "files": {
+    "readme.txt": "hello from the test world\n",
+    "docs/a.md": "# a\n",
+    "docs/b.md": "# b\n",
+    "empty": ""
+  },
+  "commands": [
+    {
+      "name": "upper",
+      "summary": "uppercase stdin",
+      "usage": "upper",
+      "behavior": "copies stdin to stdout uppercased; exit 0 at eof"
+    },
+    {
+      "name": "count",
+      "summary": "print numbers",
+      "usage": "count [-n number]",
+      "flags": {
+        "n": {
+          "long": "number",
+          "short": "n",
+          "type": "number"
+        }
+      },
+      "behavior": "prints 1..n (default 3), one per line, exit 0"
+    },
+    {
+      "name": "fail",
+      "summary": "exit with a code",
+      "usage": "fail <code>",
+      "behavior": "prints 'failing' to stderr and exits with argv[1]"
+    },
+    {
+      "name": "wait",
+      "summary": "wait for a signal",
+      "usage": "wait",
+      "behavior": "prints 'waiting' and blocks until INT (exit 130) or KILL"
+    },
+    {
+      "name": "env",
+      "summary": "print the environment",
+      "usage": "env",
+      "behavior": "prints the received env as NAME=value lines, sorted"
+    }
+  ],
+  "limits": {
+    "maxMessageBytes": 65536,
+    "maxProcs": 4,
+    "maxOutputBytes": 1048576,
+    "idleSeconds": 300
+  }
+}

@@ -117,7 +117,7 @@ Phase 0 ships an in-memory fake for every contract and a harness that runs `echo
 
 ## Language
 
-`docs/language.md` holds the grammar and a machine-readable case table (input, tokens, argv, stdout, exit). v1:
+`docs/language.md` holds the grammar; `docs/language/cases.jsonl` is the machine-readable case table (input, parse result, words, stdout, stderr, exit). v1:
 
 - Quoting: `'...'` has no escapes. Inside `"..."` only `\"`, `\\`, `\$` are escapes and `$VAR`/`${VAR}` expand. Unquoted `\` escapes the next character. Adjacent parts form one word (`a'b'"c"`). `#` starts a comment only at the start of a word.
 - Operators: lists `;` `&&` `||` (left-associative, equal precedence); pipelines `|` bind tighter.
@@ -296,11 +296,11 @@ rite.dispose()                 // aborts jobs, closes the socket, releases xterm
 ## Packaging and publishing
 
 - ESM only: `"type": "module"`, `files: ["dist"]`, `exports` for `.`, `./eggs`, `./remote`, `./rite.css`, `./package.json`, with `types` first in each condition. `sideEffects: ["*.css"]`. `unpkg` and `jsdelivr` fields point at the IIFE bundle.
-- Build: `tsdown` 0.23.7, pinned exactly; CI Node 24. xterm 6.0.0 and the three addons are exact devDependencies, bundled (`deps.alwaysBundle`); no peer dependency.
+- Build: `tsdown` 0.23.7, pinned exactly; CI Node 24. TypeScript 6.0.3: typescript-eslint 8.74 supports TypeScript below 6.1, so TypeScript 7 waits for it. The ESM build puts xterm in `dist/vendor/` so its size is budgeted apart from rite's own code. xterm 6.0.0 and the three addons are exact devDependencies, bundled (`deps.alwaysBundle`); no peer dependency.
 - Outputs: ESM entries with `.d.ts`; `dist/rite.bundle.min.js` (IIFE, global `Rite` = `{ createRite, defineCommand, defineEgg, eggs, remote }`); `dist/rite.css`, a static file with xterm's CSS and rite's, copied at build, never imported from JS.
 - Licence notices: a banner in every output and `THIRD_PARTY_NOTICES` in the tarball for xterm.
 - CSP: `docs/embedding.md` lists `style-src 'unsafe-inline'` (xterm creates style elements at runtime), `connect-src` for the WSS host, and `script-src` with SRI.
-- Size budgets (gzip): `rite.bundle.min.js` 150 kB; rite's own code excluding xterm 45 kB. xterm and the addons measure about 102 kB.
+- Size budgets (gzip): `rite.bundle.min.js` 150 kB; rite's own ESM code 45 kB; the unminified ESM xterm chunk 120 kB (measured 109 kB; consumers' bundlers minify it).
 - `protocol/` is the source of truth; the build copies the schema into `server/` (for `go:embed`) and into the package, with a drift check in CI. TS protocol types are generated from the schema; Go types are hand-written and tested against the fixtures.
 - CDN: jsDelivr, unpkg, and esm.sh serve every npm version with no setup. The release workflow hashes `rite.bundle.min.js` and `rite.css` from the packed tarball, fetches the exact-version jsDelivr and unpkg URLs after publish, and fails if the bytes differ. SRI hashes go in the release notes, README, and docs. esm.sh rebuilds its output, so it is listed without SRI. cdnjs submission after 1.0.
 
@@ -325,11 +325,11 @@ site/                 demo and docs host (GitHub Pages); man pages render inside
 .github/              workflows, issue and PR templates
 ```
 
-pnpm workspace at the root. The 2012 code is tagged `legacy` and removed from the tree.
+npm workspaces at the root (no extra package manager). The 2012 code is tagged `legacy` and removed from the tree.
 
 ## Open source
 
-`README.md` (what, install, CDN snippet with SRI, a 20-line embed, link to the demo), `LICENSE`, `THIRD_PARTY_NOTICES`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` (Contributor Covenant, latest version at phase 0), `SECURITY.md` (GitHub private vulnerability reporting), `CHANGELOG.md` (Changesets), `AGENTS.md`, issue and PR templates.
+`README.md` (what, install, CDN snippet with SRI, a 20-line embed, link to the demo), `LICENSE`, `THIRD_PARTY_NOTICES`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` (Contributor Covenant 3.0), `SECURITY.md` (GitHub private vulnerability reporting), `CHANGELOG.md` (Changesets), `AGENTS.md`, issue and PR templates.
 
 ## Testing
 
@@ -402,7 +402,7 @@ npm name `ritesh`. Phase 0 asks the current owner for a transfer and, if there i
 
 Each phase: implement, lint and test, Codex review, commit. Units marked (F) go to Fable 5.2 sub-agents; agent choice is confirmed with the owner before dispatch. A unit owns its directory and does not edit `contracts.ts`, `language.md`, or `protocol/`.
 
-0. Foundation (inline): `legacy` tag; layout, pnpm, tooling; LICENSE and community files; `contracts.ts` with fakes; `language.md` with the case table; `protocol.md`, schema, traces, `world.json`, replay harness; `term` interface with a headless implementation; every build output from a stub entry with publint, attw, size-limit, and the pack-and-import test in CI; npm name claimed. Exit test: `echo hi | cat > /tmp/x` runs through the fakes.
+0. Foundation (inline): `legacy` tag; layout, npm workspaces, tooling; LICENSE and community files; `contracts.ts` with fakes; `language.md` with the case table; `protocol.md`, schema, traces, `world.json`, replay harness; `term` interface with a headless implementation; every build output from a stub entry with publint, attw, size-limit, and the pack-and-import test in CI; npm name claimed. Exit test: `echo hi | cat > /tmp/x` runs through the fakes.
 1. Wave A, in parallel: parser (F, typescript); vfs (F, typescript); rite.1 client (F, typescript); Go server (F, golang). Each against the phase 0 fakes, traces, and case table.
 2. Kernel (inline), after wave A: executor, pipes, redirects, signals, completion, builtins, `p.sys`. Replaces the kernel fake.
 3. Wave B, in parallel: editor (F, typescript); `/bin` commands and `man` (F, typescript); eggs (F, typescript). `term` xterm implementation and `createRite` (inline). `commands.md`.

@@ -1,0 +1,16 @@
+{"dir": "c2s", "match": "exact", "msg": {"jsonrpc": "2.0", "id": 1, "method": "rite.hello", "params": {"protocol": "rite.1", "version": "0.0.0", "token": "test-token", "tty": {"cols": 80, "rows": 24}, "capabilities": []}}}
+{"dir": "s2c", "match": "shape", "msg": {"jsonrpc": "2.0", "id": 1, "result": {"session": "s", "resumed": false, "commands": [{"name": "upper", "summary": "uppercase stdin", "usage": "upper"}, {"name": "count", "summary": "print numbers", "usage": "count [-n number]", "flags": {"n": {"long": "number", "short": "n", "type": "number"}}}, {"name": "fail", "summary": "exit with a code", "usage": "fail <code>"}, {"name": "wait", "summary": "wait for a signal", "usage": "wait"}, {"name": "env", "summary": "print the environment", "usage": "env"}], "limits": {"maxMessageBytes": 65536, "maxProcs": 4, "maxOutputBytes": 1048576, "idleSeconds": 300}, "capabilities": []}}}
+{"dir": "c2s", "match": "exact", "msg": {"jsonrpc": "2.0", "id": 2, "method": "fs.stat", "params": {"path": "readme.txt"}}}
+{"dir": "s2c", "match": "shape", "msg": {"jsonrpc": "2.0", "id": 2, "result": {"type": "file", "size": 26, "mode": 420, "mtime": 0}}}
+{"dir": "c2s", "match": "exact", "msg": {"jsonrpc": "2.0", "id": 3, "method": "fs.list", "params": {"path": "docs"}}}
+{"dir": "s2c", "match": "exact", "msg": {"jsonrpc": "2.0", "id": 3, "result": {"entries": [{"name": "a.md", "type": "file"}, {"name": "b.md", "type": "file"}], "truncated": false}}}
+{"dir": "c2s", "match": "exact", "msg": {"jsonrpc": "2.0", "id": 4, "method": "fs.read", "params": {"path": "docs/a.md"}}}
+{"dir": "s2c", "match": "exact", "msg": {"jsonrpc": "2.0", "id": 4, "result": {"data": "# a\n", "eof": true}}}
+{"dir": "c2s", "match": "exact", "msg": {"jsonrpc": "2.0", "id": 5, "method": "fs.read", "params": {"path": "readme.txt", "offset": 6, "length": 4}}}
+{"dir": "s2c", "match": "exact", "msg": {"jsonrpc": "2.0", "id": 5, "result": {"data": "from", "eof": false}}}
+{"dir": "c2s", "match": "exact", "msg": {"jsonrpc": "2.0", "id": 6, "method": "fs.stat", "params": {"path": "missing"}}}
+{"dir": "s2c", "match": "shape", "msg": {"jsonrpc": "2.0", "id": 6, "error": {"code": -32000, "message": "no such file or directory", "data": {"errno": "ENOENT", "path": "missing"}}}}
+{"dir": "c2s", "match": "exact", "msg": {"jsonrpc": "2.0", "id": 7, "method": "fs.read", "params": {"path": "../etc/passwd"}}}
+{"dir": "s2c", "match": "shape", "msg": {"jsonrpc": "2.0", "id": 7, "error": {"code": -32000, "message": "invalid argument", "data": {"errno": "EINVAL", "path": "../etc/passwd"}}}}
+{"dir": "c2s", "match": "exact", "msg": {"jsonrpc": "2.0", "id": 8, "method": "fs.list", "params": {"path": "readme.txt"}}}
+{"dir": "s2c", "match": "shape", "msg": {"jsonrpc": "2.0", "id": 8, "error": {"code": -32000, "message": "not a directory", "data": {"errno": "ENOTDIR", "path": "readme.txt"}}}}

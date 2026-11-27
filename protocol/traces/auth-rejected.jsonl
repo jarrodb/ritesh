@@ -1,0 +1,2 @@
+{"dir": "c2s", "match": "exact", "msg": {"jsonrpc": "2.0", "id": 1, "method": "rite.hello", "params": {"protocol": "rite.1", "version": "0.0.0", "token": "wrong", "tty": {"cols": 80, "rows": 24}, "capabilities": []}}}
+{"dir": "s2c", "close": 4001}

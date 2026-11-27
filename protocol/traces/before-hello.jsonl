@@ -1,0 +1,2 @@
+{"dir": "c2s", "match": "exact", "msg": {"jsonrpc": "2.0", "id": 1, "method": "fs.stat", "params": {"path": ""}}}
+{"dir": "s2c", "close": 4000}

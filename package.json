@@ -1,0 +1,29 @@
+{
+  "name": "ritesh-workspace",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24.11.0"
+  },
+  "scripts": {
+    "build": "npm run build -w ritesh",
+    "lint": "eslint . && npm run typecheck -w ritesh",
+    "test": "npm test -w ritesh",
+    "check:package": "npm run check:package -w ritesh",
+    "changeset": "changeset",
+    "sync:protocol": "node scripts/sync-protocol.mjs"
+  },
+  "devDependencies": {
+    "@changesets/cli": "3.0.3",
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.4",
+    "eslint": "10.15.0",
+    "globals": "17.14.0",
+    "json-schema-to-typescript": "16.0.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.74.0"
+  }
+}
