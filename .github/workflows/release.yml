@@ -77,9 +77,21 @@ jobs:
           done
           cat ../../sri.txt
 
+      # The first version is published by hand (npm takes a trusted publisher
+      # only for a package that exists); a version already on npm passes only
+      # when its tarball is the one this run packed.
       - name: Publish to npm (trusted publishing, provenance)
         working-directory: packages/ritesh
-        run: npm publish --provenance --access public
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          packed=$(node -p "require('../../pack.json')[0].integrity")
+          published=$(npm view "riteshjs@$v" dist.integrity 2>/dev/null || true)
+          if [ -n "$published" ]; then
+            test "$published" = "$packed" || { echo "riteshjs@$v is on npm with other contents ($published, packed $packed)"; exit 1; }
+            echo "riteshjs@$v is already on npm with these bytes"
+            exit 0
+          fi
+          npm publish --provenance --access public
 
       - name: Tag the Go module on the same commit
         run: |
@@ -115,6 +127,6 @@ jobs:
             echo "<script src=\"https://cdn.jsdelivr.net/npm/riteshjs@$v/dist/rite.bundle.min.js\" integrity=\"$js\" crossorigin=\"anonymous\"></script>"
             echo '```'
             echo
-            echo "Go: \`go get github.com/jarrodb/ritesh/server@server/$GITHUB_REF_NAME\`"
+            echo "Go: \`go get github.com/jarrodb/ritesh/server@$GITHUB_REF_NAME\`"
           } > notes.md
           gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md
