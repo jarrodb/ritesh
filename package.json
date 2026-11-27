@@ -9,10 +9,10 @@
     "node": ">=24.11.0"
   },
   "scripts": {
-    "build": "npm run build -w ritesh",
-    "lint": "eslint . && npm run typecheck -w ritesh",
-    "test": "npm test -w ritesh",
-    "check:package": "npm run check:package -w ritesh",
+    "build": "npm run build -w riteshjs",
+    "lint": "eslint . && npm run typecheck -w riteshjs",
+    "test": "npm test -w riteshjs",
+    "check:package": "npm run check:package -w riteshjs",
     "changeset": "changeset",
     "sync:protocol": "node scripts/sync-protocol.mjs"
   },

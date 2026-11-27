@@ -9,12 +9,12 @@ rite has its own small language: quoting, `|`, `&&`, `||`, `;`, redirects into a
 ## Use
 
 ```sh
-npm install ritesh
+npm install riteshjs
 ```
 
 ```ts
-import { createRite, defineCommand } from "ritesh"
-import "ritesh/rite.css"
+import { createRite, defineCommand } from "riteshjs"
+import "riteshjs/rite.css"
 
 const hello = defineCommand({
   name: "hello",
@@ -35,8 +35,8 @@ createRite({
 From a CDN, with no build step:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ritesh@VERSION/dist/rite.css">
-<script src="https://cdn.jsdelivr.net/npm/ritesh@VERSION/dist/rite.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/riteshjs@VERSION/dist/rite.css">
+<script src="https://cdn.jsdelivr.net/npm/riteshjs@VERSION/dist/rite.bundle.min.js"></script>
 <script>Rite.createRite({ element: document.getElementById("term") })</script>
 ```
 

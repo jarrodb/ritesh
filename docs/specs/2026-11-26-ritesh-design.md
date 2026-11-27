@@ -11,7 +11,7 @@ This rewrites the 2012 ritesh.js in place. No 2012 code carries forward; its ide
 - xterm.js 6.0.0 and its addons (`fit`, `unicode11`, `web-links`) are the only third-party code, bundled into the output at exact versions. Everything else is rite's.
 - rite is not bash, zsh, or POSIX. `docs/language.md` defines the language; the parser follows it.
 - The remote protocol is JSON-RPC 2.0. The server decides what runs. The client sends argv, input lines, and signals; it never receives code or raw terminal control.
-- Repo `jarrodb/ritesh` (public). Go module `github.com/jarrodb/ritesh/server`. npm `ritesh` (see Decisions).
+- Repo `jarrodb/ritesh` (public). Go module `github.com/jarrodb/ritesh/server`. npm `riteshjs` (see Decisions).
 - MIT, `Copyright (c) 2026 Jarrod Baumann`. The LICENSE covers the new code; the 2012 code keeps its own header under the `legacy` tag.
 - Browser baseline: the current and previous major release of Chromium, Firefox, and Safari. Playwright runs all three engines. Mobile renders and accepts input; it gets no mobile-specific editing in v1.
 
@@ -45,7 +45,7 @@ Arrows are call direction. Import rules:
 | `remote` | rite.1 client; exposes a `MountProvider` and a `CommandSource` | contracts |
 | `index` | `createRite`, wiring | all above except `remote` |
 
-`remote` is a separate entry (`ritesh/remote`); core never imports it. Only `term` imports xterm.
+`remote` is a separate entry (`riteshjs/remote`); core never imports it. Only `term` imports xterm.
 
 ## Contracts
 
@@ -189,7 +189,7 @@ defineEgg({ id: "sudoers", trigger: { command: "sudo" }, run: async (p) => PASS 
 - Triggers: `command` (name, or name plus argv predicate), `input` (regex on the raw line, checked before parsing), `keys` (sequence, attached by the editor through the kernel's egg registry).
 - Order: `input` eggs, then alias and expansion, then `command` eggs, then lookup. The first egg that does not return `PASS` handles the line. In a pipeline, `command` eggs apply to each stage.
 - `createRite({ eggs })` registers; `eggs: false` disables all.
-- Shipped in `ritesh/eggs`:
+- Shipped in `riteshjs/eggs`:
   - `sudoers`: `<user> is not in the sudoers file. This incident will be reported.`
   - `rmrf`: matches `rm` with recursive and force flags (any spelling) and a target that normalizes to `/`. Prints a fake deletion cascade, then `just kidding. nothing here is yours to delete.`
 - Product eggs live in the host (mdm: `memdsk`).
@@ -269,9 +269,9 @@ One writer goroutine per connection. Sessions live in process memory: run one re
 ## Host API
 
 ```ts
-import { createRite } from "ritesh"
-import { sudoers, rmrf } from "ritesh/eggs"
-import { remote } from "ritesh/remote"
+import { createRite } from "riteshjs"
+import { sudoers, rmrf } from "riteshjs/eggs"
+import { remote } from "riteshjs/remote"
 // <link rel="stylesheet" href=".../rite.css"> (contains xterm's CSS)
 
 const rite = createRite({
@@ -392,8 +392,9 @@ npm package `rite.sh`.
 ||| fable question: npm blocks new names that differ from an existing one only by punctuation.
 ||| claude edit: confirmed. `ritesh` exists on npm (another owner, created 2017, last published 2022, no README, about 23 downloads a month), so `rite.sh` and `rite-sh` are refused.
 ||| owner edit: the name is `ritesh`, everywhere.
+||| owner edit: npm takes `riteshjs` instead of waiting on a transfer.
 =======
-npm name `ritesh`. Phase 0 asks the current owner for a transfer and, if there is no answer, files an npm support request under the name-squatting policy. Until `ritesh` is ours, prereleases publish as `@jarrodb/ritesh`; imports, CDN URLs, and docs switch to `ritesh` when the transfer lands.
+npm name `riteshjs` (free; npm's similarity check strips only `.`, `-`, and `_`, so it does not collide with `ritesh`). The repo, the shell, the Go module, and the docs keep `ritesh`.
 >>>>>>> claude
 
 - Cut from v1: `su`, interactive subshell, the `path` egg trigger, gid checks, `rite.min.js`.
