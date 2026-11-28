@@ -11,7 +11,7 @@
 
 rite has its own small language: quoting, `|`, `&&`, `||`, `;`, redirects into an in-memory filesystem, `$VARS`, globs, and aliases. It is not bash; see [docs/language.md](docs/language.md).
 
-> Status: 0.1.0, the first release.
+> Status: 0.2.0.
 
 ## Use
 

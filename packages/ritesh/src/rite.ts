@@ -7,7 +7,7 @@ import { createParser } from "./parser/index.js"
 import { createVfs } from "./vfs/index.js"
 
 /** The rite version: RITE_VERSION, `rite --version`, and the parser's messages. */
-export const VERSION = "0.1.0"
+export const VERSION = "0.2.0"
 
 const DEFAULT_PROMPT = "%F{green}%n@%m%f %F{blue}%~%f %# "
 

@@ -16,8 +16,8 @@ const rite = createRite({ element: document.getElementById("term")! })
 Without a bundler, load the single-script build from a CDN. Each release lists the SRI hashes:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/riteshjs@0.1.0/dist/rite.css" integrity="sha384-..." crossorigin="anonymous">
-<script src="https://cdn.jsdelivr.net/npm/riteshjs@0.1.0/dist/rite.bundle.min.js" integrity="sha384-..." crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/riteshjs@0.2.0/dist/rite.css" integrity="sha384-..." crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/riteshjs@0.2.0/dist/rite.bundle.min.js" integrity="sha384-..." crossorigin="anonymous"></script>
 <script>Rite.createRite({ element: document.getElementById("term") })</script>
 ```
 
