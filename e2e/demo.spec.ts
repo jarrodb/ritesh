@@ -97,3 +97,11 @@ test("fits a phone without scrolling sideways", async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBe(0)
   await expect.poll(() => screen(page)).toContain("type help. more than one way in.")
 })
+
+test("jq runs in its worker, and ipcalc does address math", async ({ page }) => {
+  await ready(page)
+  await page.keyboard.type(`echo '{"name":"Ada","tags":["a","b"]}' | jq -c '{n: .name, count: (.tags | length)}'\n`)
+  await expect.poll(() => screen(page), { timeout: 15_000 }).toContain('{"n":"Ada","count":2}')
+  await page.keyboard.type("ipcalc 10.0.0.17/22\n")
+  await expect.poll(() => screen(page)).toContain("10.0.0.1 - 10.0.3.254 (1,022)")
+})

@@ -29,7 +29,7 @@ jobs:
         run: |
           mkdir -p _site/vendor
           cp site/index.html _site/
-          cp packages/ritesh/dist/rite.bundle.min.js packages/ritesh/dist/rite.css _site/vendor/
+          cp packages/ritesh/dist/rite.bundle.min.js packages/ritesh/dist/rite.css packages/ritesh/dist/jq.js packages/ritesh/dist/jq-worker.js packages/ritesh/dist/jq.wasm _site/vendor/
       - uses: actions/upload-pages-artifact@v4
         with:
           path: _site
