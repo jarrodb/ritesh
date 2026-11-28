@@ -10,8 +10,11 @@ const routes = {
   "/index.html": join(root, "site/index.html"),
   "/vendor/rite.bundle.min.js": join(root, "packages/ritesh/dist/rite.bundle.min.js"),
   "/vendor/rite.css": join(root, "packages/ritesh/dist/rite.css"),
+  "/vendor/jq.js": join(root, "packages/ritesh/dist/jq.js"),
+  "/vendor/jq-worker.js": join(root, "packages/ritesh/dist/jq-worker.js"),
+  "/vendor/jq.wasm": join(root, "packages/ritesh/dist/jq.wasm"),
 }
-const types = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css" }
+const types = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".wasm": "application/wasm" }
 const port = Number(process.env.PORT ?? 4178)
 createServer(async (req, res) => {
   const file = routes[new URL(req.url ?? "/", "http://x").pathname]

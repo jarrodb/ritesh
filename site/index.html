@@ -138,7 +138,9 @@
   </span>
 </footer>
 <script src="vendor/rite.bundle.min.js"></script>
-<script>
+<script type="module">
+  // jq is an add-on: its worker and jq.wasm load from vendor/ the first time jq runs.
+  import * as jq from "./vendor/jq.js"
   const INSTALL = "npm install riteshjs"
   // The bundle names its own version, so the tags follow every release.
   const CDN = `https://cdn.jsdelivr.net/npm/riteshjs@${Rite.VERSION}/dist/`
@@ -169,6 +171,8 @@
     cmd("cdn", "print the script tags"),
     cmd("cd code", "open the source"),
     cmd("theme", "list or switch colors"),
+    cmd("ipv6", "test your connection"),
+    cmd("jq", "filter JSON"),
     "",
     "type help. more than one way in.",
     "",
@@ -250,7 +254,8 @@
       motd,
       theme: Rite.themes[initial],
       font: { family: "'Martian Mono', ui-monospace, monospace", size: window.innerWidth < 640 ? 12 : 14 },
-      commands,
+      // The browser network tools (no httping: this page names no endpoint) and jq.
+      commands: [...commands, ...Rite.net.commands(), jq.command()],
       files: {
         "/home/guest/about.txt": "rite is a shell for the browser, built on xterm.js.\nit started as a 2012 homepage experiment. it grew a language.\n",
         "/home/guest/README": "try: ls /bin, man ls, echo hi | tee /tmp/x, cat /tmp/x\n",
