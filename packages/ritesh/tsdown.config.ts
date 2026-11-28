@@ -1,4 +1,5 @@
 import { defineConfig } from "tsdown"
+import { jqUntrim } from "./scripts/jq-untrim.mjs"
 
 const XTERM = /^@xterm\//
 const BUNDLED = [XTERM, "ipaddr.js"]
@@ -6,7 +7,7 @@ const banner = "/*! ritesh | MIT | Copyright (c) 2026 Jarrod Baumann | bundles x
 
 export default defineConfig([
   {
-    entry: { index: "src/index.ts", eggs: "src/eggs.ts", remote: "src/remote.ts", net: "src/net.ts" },
+    entry: { index: "src/index.ts", eggs: "src/eggs.ts", remote: "src/remote.ts", net: "src/net.ts", jq: "src/jq.ts" },
     format: "esm",
     platform: "browser",
     target: "es2023",
@@ -20,6 +21,19 @@ export default defineConfig([
         groups: [{ name: "vendor/xterm", test: /node_modules[\\/]@xterm[\\/]/ }],
       },
     },
+  },
+  {
+    // The jq worker: its own module with jq-wasm inside; jq.wasm is copied beside it.
+    entry: { "jq-worker": "src/jq/worker.ts" },
+    format: "esm",
+    platform: "browser",
+    target: "es2023",
+    dts: false,
+    clean: false,
+    sourcemap: false,
+    deps: { alwaysBundle: ["jq-wasm"] },
+    plugins: [jqUntrim()],
+    banner: "/*! ritesh jq worker | MIT | bundles jq-wasm (MIT) and jq (MIT), see THIRD_PARTY_NOTICES */",
   },
   {
     entry: { "rite.bundle": "src/iife.ts" },

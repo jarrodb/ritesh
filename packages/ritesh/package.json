@@ -43,6 +43,12 @@
       "types": "./dist/net.d.ts",
       "default": "./dist/net.js"
     },
+    "./jq": {
+      "types": "./dist/jq.d.ts",
+      "default": "./dist/jq.js"
+    },
+    "./jq-worker.js": "./dist/jq-worker.js",
+    "./jq.wasm": "./dist/jq.wasm",
     "./rite.css": "./dist/rite.css",
     "./package.json": "./package.json"
   },
@@ -55,7 +61,7 @@
     "build": "tsdown && node scripts/copy-css.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
-    "check:package": "publint --strict && attw --pack . --profile esm-only --exclude-entrypoints ./rite.css && size-limit && node scripts/pack-smoke.mjs",
+    "check:package": "publint --strict && attw --pack . --profile esm-only --exclude-entrypoints ./rite.css ./jq-worker.js ./jq.wasm && size-limit && node scripts/pack-smoke.mjs",
     "prepack": "node -e \"require('fs').copyFileSync('../../LICENSE','LICENSE')\""
   },
   "devDependencies": {
@@ -68,6 +74,7 @@
     "@xterm/xterm": "6.0.0",
     "ajv": "8.20.0",
     "ipaddr.js": "2.5.0",
+    "jq-wasm": "3.0.0-jq-1.8.2",
     "publint": "0.3.25",
     "size-limit": "14.3.0",
     "tsdown": "0.23.7",
@@ -85,7 +92,9 @@
       "path": [
         "dist/*.js",
         "!dist/rite.bundle.min.js",
-        "!dist/net.js"
+        "!dist/net.js",
+        "!dist/jq.js",
+        "!dist/jq-worker.js"
       ],
       "limit": "75 kB",
       "gzip": true
@@ -100,6 +109,24 @@
       "name": "net add-on (with ipaddr.js)",
       "path": "dist/net.js",
       "limit": "12 kB",
+      "gzip": true
+    },
+    {
+      "name": "jq add-on (the command)",
+      "path": "dist/jq.js",
+      "limit": "4 kB",
+      "gzip": true
+    },
+    {
+      "name": "jq worker (with jq-wasm)",
+      "path": "dist/jq-worker.js",
+      "limit": "32 kB",
+      "gzip": true
+    },
+    {
+      "name": "jq.wasm",
+      "path": "dist/jq.wasm",
+      "limit": "360 kB",
       "gzip": true
     }
   ]

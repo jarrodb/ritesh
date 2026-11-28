@@ -18,11 +18,8 @@ export interface NetOptions {
   sleep?: (ms: number, signal: AbortSignal) => Promise<void>
 }
 
-export const DEFAULT_RESOLVERS: Record<string, string> = { cloudflare: "https://cloudflare-dns.com/dns-query" }
-export const DEFAULT_REACHABILITY = { ipv4: "https://ipv4.icanhazip.com", ipv6: "https://ipv6.icanhazip.com" }
-
-// Text from the network is shown as text: control characters (escape
-// sequences among them) are written as \xNN.
+// Text from the network is shown as text: control characters, escape
+// sequences among them, are written as \xNN. Newlines and tabs stay.
 export function printable(s: string): string {
   let out = ""
   for (const ch of s) {
@@ -32,6 +29,10 @@ export function printable(s: string): string {
   }
   return out
 }
+
+export const DEFAULT_RESOLVERS: Record<string, string> = { cloudflare: "https://cloudflare-dns.com/dns-query" }
+export const DEFAULT_REACHABILITY = { ipv4: "https://ipv4.icanhazip.com", ipv6: "https://ipv6.icanhazip.com" }
+
 
 function defaultSleep(ms: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {

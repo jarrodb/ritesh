@@ -99,3 +99,27 @@ The server is `github.com/jarrodb/ritesh/server`; see `protocol.md`.
 ## Keyboard
 
 Esc then Tab moves focus out of the terminal. The page should say so.
+
+## Network tools and jq
+
+Two opt-in add-ons. Both run in the visitor's browser; neither needs a server of yours.
+
+```ts
+import { createRite } from "riteshjs"
+import * as net from "riteshjs/net"
+import * as jq from "riteshjs/jq"
+
+createRite({
+  element,
+  commands: [
+    ...net.commands({ endpoints: { api: "https://api.example.com/healthz" } }),
+    jq.command(),
+  ],
+})
+```
+
+`riteshjs/net` gives `ipcalc`, `dig` (DNS over HTTPS), `ipv6` (the visitor's IPv4 and IPv6 reachability), and `httping` (HTTPS round trips). Every address they reach is yours to set: `resolvers` for `dig` (default Cloudflare's), `reachability` for `ipv6` (default `ipv4.icanhazip.com` and `ipv6.icanhazip.com`, which see the visitor's addresses; `false` leaves the command out), and `endpoints` for `httping` (none by default, so no `httping`). A visitor never passes a URL, and redirects are refused. The bundle has them as `Rite.net`.
+
+`riteshjs/jq` is real jq in a Web Worker that gets only its input. Serve `jq-worker.js` and `jq.wasm` from your own origin, beside `jq.js` (a bundler that understands `new URL(..., import.meta.url)` does this), or pass `createWorker` and `wasmURL`. Under a strict CSP, give the worker file its own policy with `'wasm-unsafe-eval'` added; the page's policy stays as it is. Input is capped at 10 MB, output at 10,000 lines, and a run at 5 seconds (`maxInput`, `maxOutputLines`, `timeoutSeconds`).
+
+ICMP ping, traceroute, and mtr cannot run in a browser; nothing here imitates them.
