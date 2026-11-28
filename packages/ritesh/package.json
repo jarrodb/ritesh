@@ -39,6 +39,10 @@
       "types": "./dist/remote.d.ts",
       "default": "./dist/remote.js"
     },
+    "./net": {
+      "types": "./dist/net.d.ts",
+      "default": "./dist/net.js"
+    },
     "./rite.css": "./dist/rite.css",
     "./package.json": "./package.json"
   },
@@ -63,6 +67,7 @@
     "@xterm/headless": "6.0.0",
     "@xterm/xterm": "6.0.0",
     "ajv": "8.20.0",
+    "ipaddr.js": "2.5.0",
     "publint": "0.3.25",
     "size-limit": "14.3.0",
     "tsdown": "0.23.7",
@@ -79,7 +84,8 @@
       "name": "rite code (ESM, unminified: consumers' bundlers minify)",
       "path": [
         "dist/*.js",
-        "!dist/rite.bundle.min.js"
+        "!dist/rite.bundle.min.js",
+        "!dist/net.js"
       ],
       "limit": "75 kB",
       "gzip": true
@@ -88,6 +94,12 @@
       "name": "xterm vendor chunk",
       "path": "dist/vendor/*.js",
       "limit": "120 kB",
+      "gzip": true
+    },
+    {
+      "name": "net add-on (with ipaddr.js)",
+      "path": "dist/net.js",
+      "limit": "12 kB",
       "gzip": true
     }
   ]
